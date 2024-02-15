@@ -1,0 +1,2 @@
+⍝ test.apl
+'Hello, world!'
