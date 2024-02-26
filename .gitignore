@@ -14,4 +14,4 @@ Cargo.lock
 *.pdb
 
 # apl history
-**/.apl.history
+APL_examples/.apl.history
