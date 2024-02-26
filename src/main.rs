@@ -48,6 +48,10 @@ fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
   Ok(("", vec_lines))
 }
 
+fn reverse(s: &str) -> String {
+  s.chars().rev().collect()
+}
+
 use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>>  {
   // println!("{}", SFun::Assign);
@@ -83,12 +87,23 @@ fn main() -> Result<(), Box<dyn Error>>  {
   }
   
   // Split the string into lines
-  let vec_lines: Vec<&str> = code.lines().collect();
-
+  let vec_lines: Vec<String> = code.lines()
+  .map(|line| reverse(line))
+  .collect();
   // let mut vec_lines = Vec::new();
   // vec_lines.push("something");
+   // Print the reversed lines
+  let mut ref_vec_lines: Vec<&str> = Vec::new(); 
+  for line in vec_lines.iter() {
+    ref_vec_lines.push(line.as_str());
+  }
 
-  match parse_lines(vec_lines) {
+  for line in &vec_lines {
+    println!("{}", line);
+  }
+
+
+  match parse_lines(ref_vec_lines) {
     Ok((remainder,output)) => {
       println!("Remainder: {}",remainder);
       println!("Output: {:?}", output);
