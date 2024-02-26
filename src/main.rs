@@ -39,6 +39,15 @@ fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
   };
 }
 
+fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
+  let mut vec_lines = Vec::new();
+  let mut vec_line = Vec::new();
+  let stmt = Stmt::Vector(Vector::Scalar(Scalar::Integer(2)));
+  vec_line.push(stmt);
+  vec_lines.push(vec_line);
+  Ok(("", vec_lines))
+}
+
 use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>>  {
   // println!("{}", SFun::Assign);
@@ -59,6 +68,8 @@ fn main() -> Result<(), Box<dyn Error>>  {
   str ← 'Hello world'
   str";
 
+  
+
   // let code = "⍝testapl\n";
   match parse_apl(code) {
     Ok((remainder,output)) => {
@@ -71,6 +82,21 @@ fn main() -> Result<(), Box<dyn Error>>  {
     }
   }
   
+  // Split the string into lines
+  let vec_lines: Vec<&str> = code.lines().collect();
+
+  // let mut vec_lines = Vec::new();
+  // vec_lines.push("something");
+
+  match parse_lines(vec_lines) {
+    Ok((remainder,output)) => {
+      println!("Remainder: {}",remainder);
+      println!("Output: {:?}", output);
+    },
+    Err(error) => {
+      println!("{}",error);
+    }
+  }
   // if let Ok((remainder,output)) = parse_apl(code) {
   //   println!("{}",remainder);
   //   println!("{}",output);
@@ -83,8 +109,15 @@ fn main() -> Result<(), Box<dyn Error>>  {
 
 // TESTS
 
+// #[test]
+// #[ignore]
+// fn test_parse_lines() {
+//   assert_eq!(parse_lines(""),Ok(("",vec![Stmt::Vector(Vector::Scalar(Scalar::Integer(2)))])));
+// }
+
+
 #[test]
-fn parse_color() {
+fn test_parse_color() {
   assert_eq!(hex_color("#2F14DF"), Ok(("", Color {
     red: 47,
     green: 20,
