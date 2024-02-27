@@ -1,4 +1,4 @@
-# APL-convertor
+# APL-convertor (work in progress)
 Implementing a parser and generator for APL, to any other language
 
 To write apl symbols (Linux):
