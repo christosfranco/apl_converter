@@ -130,10 +130,26 @@ fn main() -> Result<(), Box<dyn StdError>>  {
   return Ok(());
 }
 
+
+//// SCALAR PARSERS
+
 fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
-  map_res(digit1, str::parse::<i64>)(input)
+  // map_res(digit1, str::parse::<i64>)(input)
+  match digit1(input) {
+    Ok((remainder,output)) => {
+      let rev: String = reverse(output);
+      let res = rev.parse::<i64>();
+      match res {
+        Ok(int) => Ok((remainder,int)),
+        Err(_error) => Err(nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Digit)))
+      }
+    }
+    Err(error) => Err(error)
+  }
 }
-use std::num::ParseFloatError;
+
+// use std::num::ParseFloatError;
+
 fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   let zero: String = "0.".to_string();
   match digit1(input) {
@@ -150,35 +166,40 @@ fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   }
 }
 
-
-fn parse_j(input:&str) -> IResult<&str, &str> {
-  alt((
-    tag("j"),
-    tag("J"),
-  )
-  )(input)
-}
-
 /// Format Imaginary J Real
 fn parse_complex(input: &str) ->  IResult<&str,APL_convertor::ast::Complex> {
-  match separated_pair(parse_str_to_int, parse_j, parse_str_to_int)(input) {
+  match separated_pair(parse_intfloat, alt((tag("j"),tag("J"))), parse_intfloat)(input) {
     Ok((remainder, (first, second))) => {
       // real part is first, i part is second
-      Ok((remainder, Complex::Complex(IntFloat::Integer(second),IntFloat::Integer(first))))
+      Ok((remainder, Complex::Complex(second,first)))
     },
     Err(error) => Err(error)
   }
 }
 
-fn parse_intfloat(input: &str) ->  IResult<&str,APL_convertor::ast::IntFloat> {
+fn parse_float(input:&str) -> IResult<&str, APL_convertor::ast::IntFloat> {
   match separated_pair(parse_str_to_float, tag("."), parse_str_to_int)(input) {
     Ok((remainder, (first, second))) => {
-      let first2 = first ;
-      let second2 = second;
       Ok((remainder, (IntFloat::Float(first+second as f64))))
     },
     Err(error) => Err(error)
   }
+}
+
+fn parse_int(input:&str) -> IResult<&str, APL_convertor::ast::IntFloat> {
+  match parse_str_to_int(input) {
+    Ok((remainder, ( second))) => {
+      Ok((remainder, (IntFloat::Integer(second))))
+    },
+    Err(error) => Err(error)
+  }
+}
+
+
+fn parse_intfloat(input: &str) ->  IResult<&str,APL_convertor::ast::IntFloat> {
+  alt((parse_float,
+      parse_int),
+  ) (input)
 }
 
 // TESTS
@@ -186,9 +207,22 @@ fn parse_intfloat(input: &str) ->  IResult<&str,APL_convertor::ast::IntFloat> {
 #[test]
 fn test_parse_float() {
   // assuming lines are reversed?
-  let string = "3.2";
+  let string = "312.23311";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::IntFloat = IntFloat::Float(3.2);
+  let output : APL_convertor::ast::IntFloat = IntFloat::Float(312.23311);
+  let expected: Result<(&str, APL_convertor::ast::IntFloat), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_intfloat(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
+}
+
+#[test]
+fn test_parse_int() {
+  // assuming lines are reversed?
+  let string = "312";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::IntFloat = IntFloat::Integer(312);
   let expected: Result<(&str, APL_convertor::ast::IntFloat), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_intfloat(input);
   println!("Actual: {:?}", actual);
@@ -198,10 +232,10 @@ fn test_parse_float() {
 
 
 #[test]
-fn test_parse_complex() {
-  let string = "3J2";
+fn test_parse_complex_int_int() {
+  let string = "31J23";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(3),IntFloat::Integer(2));
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(31),IntFloat::Integer(23));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_complex(input);
   println!("Actual: {:?}", actual);
@@ -210,41 +244,37 @@ fn test_parse_complex() {
 }
 
 #[test]
-fn test_parse_color() {
-  assert_eq!(hex_color("#2F14DF"), Ok(("", Color {
-    red: 47,
-    green: 20,
-    blue: 223,
-  })));
+fn test_parse_complex_float_int() {
+  let string = "31.23J223";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(31.23),IntFloat::Integer(223));
+  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_complex(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
 }
 
-
-// PARSE COLOR
-#[derive(Debug,PartialEq)]
-pub struct Color {
-  pub red:   u8,
-  pub green: u8,
-  pub blue:  u8,
+#[test]
+fn test_parse_complex_int_float() {
+  let string = "301J21.89";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(301),IntFloat::Float(21.89));
+  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_complex(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
 }
 
-fn from_hex(input: &str) -> Result<u8, std::num::ParseIntError> {
-  u8::from_str_radix(input, 16)
-}
-
-fn is_hex_digit(c: char) -> bool {
-  c.is_digit(16)
-}
-
-fn hex_primary(input: &str) -> IResult<&str, u8> {
-  map_res(
-    take_while_m_n(2, 2, is_hex_digit),
-    from_hex
-  )(input)
-}
-
-fn hex_color(input: &str) -> IResult<&str, Color> {
-  let (input, _) = tag("#")(input)?;
-  let (input, (red, green, blue)) = tuple((hex_primary, hex_primary, hex_primary))(input)?;
-
-  Ok((input, Color { red, green, blue }))
+#[test]
+fn test_parse_complex_float_float() {
+  let string = "35.232J20.239";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(35.232),IntFloat::Float(20.239));
+  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_complex(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
 }
