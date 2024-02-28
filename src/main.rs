@@ -1,7 +1,7 @@
 extern crate nom;
 use std::collections::HashMap;
 use nom::{
-  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{digit1, newline}, is_space, streaming::{alphanumeric0, char, line_ending}}, combinator::{map, map_res}, error::{convert_error, Error, VerboseError}, sequence::{preceded, separated_pair, terminated, tuple}, Err, IResult
+  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{digit1, newline}, is_space, streaming::{alphanumeric0, char, line_ending}}, combinator::{map, map_res, opt, peek}, error::{convert_error, Error, VerboseError}, sequence::{preceded, separated_pair, terminated, tuple}, Err, IResult
 };
 use APL_convertor::ast::*;
 
@@ -152,7 +152,7 @@ fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
 
 fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   let zero: String = "0.".to_string();
-  match digit1(input) {
+  match terminated(digit1,peek(opt((tag("¯")))))(input) {
     Ok((remainder,output)) => {
       let rev: String = reverse(output);
       let combined: &str = & (zero + &rev);
@@ -270,6 +270,18 @@ fn test_parse_complex_int_float() {
 #[test]
 fn test_parse_complex_float_float() {
   let string = "35.232J20.239";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(35.232),IntFloat::Float(20.239));
+  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_complex(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
+}
+
+#[test]
+fn test_parse_complex_neg_float_float() {
+  let string = "¯35.232J20.239";
   let input = &reverse_line(string);
   let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(35.232),IntFloat::Float(20.239));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
