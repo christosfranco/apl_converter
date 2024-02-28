@@ -94,11 +94,22 @@ pub enum Vector {
 
 #[derive(Debug)]
 pub enum Scalar {
-    Integer(i64),
-    Float(f64),
-    Complex(/* define complex type */),
+    IntFloat(IntFloat),
+    Complex(Complex ),
     Identifier(Identifier),
 }
+#[derive(Debug)]
+pub enum Complex {
+    Complex(IntFloat,IntFloat),
+}
+
+#[derive(Debug)]
+pub enum IntFloat {
+    Integer(i64),
+    Float(f64),
+}
+
+
 
 #[derive(Debug)]
 pub struct Identifier(
