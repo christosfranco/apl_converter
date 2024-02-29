@@ -134,7 +134,23 @@ fn main() -> Result<(), Box<dyn StdError>>  {
 //// SCALAR PARSERS
 
 fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
-  // map_res(digit1, str::parse::<i64>)(input)
+  // let res = alt((terminated(digit1,tag("¯")),digit1))(input);
+  match parse_negative(input) {
+    Ok((remainder,(output,boolean))) => {
+      let rev: String = reverse(output);
+      let res = rev.parse::<i64>();
+      match res {
+        Ok(int) => match boolean {
+          true => Ok((remainder,-int)),
+          false => Ok((remainder,int)),
+        }
+        Err(_error) => Err(nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Digit)))
+      }
+    }
+    Err(error) => Err(error)
+  }
+}
+fn parse_str_to_int1(input: &str) -> IResult<&str, i64> {
   match digit1(input) {
     Ok((remainder,output)) => {
       let rev: String = reverse(output);
@@ -152,7 +168,8 @@ fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
 
 fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   let zero: String = "0.".to_string();
-  match terminated(digit1,peek(opt((tag("¯")))))(input) {
+  let res = alt((terminated(digit1,tag("¯")),digit1))(input);
+  match res {
     Ok((remainder,output)) => {
       let rev: String = reverse(output);
       let combined: &str = & (zero + &rev);
@@ -166,7 +183,7 @@ fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   }
 }
 
-/// Format Imaginary J Real
+/// Format Imaginary ["j","J"] Real
 fn parse_complex(input: &str) ->  IResult<&str,APL_convertor::ast::Complex> {
   match separated_pair(parse_intfloat, alt((tag("j"),tag("J"))), parse_intfloat)(input) {
     Ok((remainder, (first, second))) => {
@@ -180,7 +197,7 @@ fn parse_complex(input: &str) ->  IResult<&str,APL_convertor::ast::Complex> {
 fn parse_float(input:&str) -> IResult<&str, APL_convertor::ast::IntFloat> {
   match separated_pair(parse_str_to_float, tag("."), parse_str_to_int)(input) {
     Ok((remainder, (first, second))) => {
-      Ok((remainder, (IntFloat::Float(first+second as f64))))
+      Ok((remainder, (IntFloat::Float((second, first)))))
     },
     Err(error) => Err(error)
   }
@@ -196,7 +213,26 @@ fn parse_int(input:&str) -> IResult<&str, APL_convertor::ast::IntFloat> {
 }
 
 
+/// bool = true => negative
+fn parse_negative(input : &str) -> IResult<&str, (&str,bool)> {
+  let res : IResult<&str,&str> = terminated(digit1,tag("¯"))(input);
+  match res {
+    Ok((remainder,output)) => return Ok((remainder,(output,true))),
+    // todo combine errors
+    Err(_error) => {
+      let res : IResult<&str,&str> = digit1(input);
+      match res {
+        Ok((remainder,output)) => return Ok((remainder,(output,false))),
+        Err(error2) => Err(error2)
+      }
+    }
+  }
+}
+
+
 fn parse_intfloat(input: &str) ->  IResult<&str,APL_convertor::ast::IntFloat> {
+
+  let res: IResult<&str,char> = peek(char('-'))(input);
   alt((parse_float,
       parse_int),
   ) (input)
@@ -209,7 +245,7 @@ fn test_parse_float() {
   // assuming lines are reversed?
   let string = "312.23311";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::IntFloat = IntFloat::Float(312.23311);
+  let output : APL_convertor::ast::IntFloat = IntFloat::Float((312,0.23311));
   let expected: Result<(&str, APL_convertor::ast::IntFloat), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_intfloat(input);
   println!("Actual: {:?}", actual);
@@ -247,7 +283,7 @@ fn test_parse_complex_int_int() {
 fn test_parse_complex_float_int() {
   let string = "31.23J223";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(31.23),IntFloat::Integer(223));
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float((31,0.23)),IntFloat::Integer(223));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_complex(input);
   println!("Actual: {:?}", actual);
@@ -259,7 +295,7 @@ fn test_parse_complex_float_int() {
 fn test_parse_complex_int_float() {
   let string = "301J21.89";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(301),IntFloat::Float(21.89));
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(301),IntFloat::Float((21,0.89)));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_complex(input);
   println!("Actual: {:?}", actual);
@@ -271,7 +307,7 @@ fn test_parse_complex_int_float() {
 fn test_parse_complex_float_float() {
   let string = "35.232J20.239";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(35.232),IntFloat::Float(20.239));
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float((35,0.232)),IntFloat::Float((20,0.239)));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_complex(input);
   println!("Actual: {:?}", actual);
@@ -281,9 +317,22 @@ fn test_parse_complex_float_float() {
 
 #[test]
 fn test_parse_complex_neg_float_float() {
-  let string = "¯35.232J20.239";
+  let string = "¯35.232J20.2112";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float(35.232),IntFloat::Float(20.239));
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float((-35,0.232)),IntFloat::Float((20,0.2112)));
+  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_complex(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
+}
+
+
+#[test]
+fn test_parse_complex_neg_int_int() {
+  let string = "¯35J20";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(-35),IntFloat::Integer(20));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_complex(input);
   println!("Actual: {:?}", actual);

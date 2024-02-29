@@ -106,7 +106,7 @@ pub enum Complex {
 #[derive(Debug)]
 pub enum IntFloat {
     Integer(i64),
-    Float(f64),
+    Float((i64,f64)),
 }
 
 
