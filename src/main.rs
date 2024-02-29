@@ -170,7 +170,7 @@ fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
 
 /// Format Imaginary ["j","J"] Real
 fn parse_complex(input: &str) ->  IResult<&str,APL_convertor::ast::Complex> {
-  match separated_pair(parse_intfloat, alt((tag("j"),tag("J"))), parse_intfloat)(input) {
+  match separated_pair(parse_intfloat, tag_no_case("j"), parse_intfloat)(input) {
     Ok((remainder, (first, second))) => {
       // real part is first, i part is second
       Ok((remainder, Complex::Complex(second,first)))
