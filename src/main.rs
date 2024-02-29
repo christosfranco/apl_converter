@@ -224,7 +224,7 @@ fn parse_id(input : &str) -> IResult<&str,APL_convertor::ast::Identifier > {
   let res: IResult<&str, &str> = recognize(alphanumeric0)(input); 
   match res {
     Ok((remainder,output)) => {
-      match output.chars().last().unwrap().is_alphabetic() {
+      match output.chars().last().unwrap_or(' ').is_alphabetic() {
         true => Ok((remainder,Identifier(reverse(output).to_string()))),
         false => Err(nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Alpha)))
       }
@@ -355,6 +355,18 @@ fn test_parse_id_error() {
   let input = &reverse_line(string);
   // let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
   let expected : Result<(&str, APL_convertor::ast::Identifier), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "1rts2", code: nom::error::ErrorKind::Alpha }));
+  let actual = parse_id(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
+}
+
+#[test]
+fn test_parse_id_error_panic() {
+  let string: &str = "-";
+  let input = &reverse_line(string);
+  // let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
+  let expected : Result<(&str, APL_convertor::ast::Identifier), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "-", code: nom::error::ErrorKind::Alpha }));
   let actual = parse_id(input);
   println!("Actual: {:?}", actual);
   println!("Expected: {:?}", expected);
