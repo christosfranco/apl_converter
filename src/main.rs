@@ -1,7 +1,7 @@
 extern crate nom;
 use std::collections::HashMap;
 use nom::{
-  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{digit1, newline}, is_space, streaming::{alphanumeric0, char, line_ending}}, combinator::{map, map_res, opt, peek}, error::{convert_error, Error, VerboseError}, sequence::{preceded, separated_pair, terminated, tuple}, Err, IResult
+  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, char, digit1, newline}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, sequence::{preceded, separated_pair, terminated, tuple}, Err, IResult
 };
 use APL_convertor::ast::*;
 
@@ -150,21 +150,6 @@ fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
     Err(error) => Err(error)
   }
 }
-fn parse_str_to_int1(input: &str) -> IResult<&str, i64> {
-  match digit1(input) {
-    Ok((remainder,output)) => {
-      let rev: String = reverse(output);
-      let res = rev.parse::<i64>();
-      match res {
-        Ok(int) => Ok((remainder,int)),
-        Err(_error) => Err(nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Digit)))
-      }
-    }
-    Err(error) => Err(error)
-  }
-}
-
-// use std::num::ParseFloatError;
 
 fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   let zero: String = "0.".to_string();
@@ -205,7 +190,7 @@ fn parse_float(input:&str) -> IResult<&str, APL_convertor::ast::IntFloat> {
 
 fn parse_int(input:&str) -> IResult<&str, APL_convertor::ast::IntFloat> {
   match parse_str_to_int(input) {
-    Ok((remainder, ( second))) => {
+    Ok((remainder, second)) => {
       Ok((remainder, (IntFloat::Integer(second))))
     },
     Err(error) => Err(error)
@@ -229,13 +214,23 @@ fn parse_negative(input : &str) -> IResult<&str, (&str,bool)> {
   }
 }
 
-
 fn parse_intfloat(input: &str) ->  IResult<&str,APL_convertor::ast::IntFloat> {
-
-  let res: IResult<&str,char> = peek(char('-'))(input);
   alt((parse_float,
       parse_int),
   ) (input)
+}
+
+fn parse_id(input : &str) -> IResult<&str,APL_convertor::ast::Identifier > {
+  let res: IResult<&str, &str> = recognize(alphanumeric0)(input); 
+  match res {
+    Ok((remainder,output)) => {
+      match output.chars().last().unwrap().is_alphabetic() {
+        true => Ok((remainder,Identifier(reverse(output).to_string()))),
+        false => Err(nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Alpha)))
+      }
+    },
+    Err(error) => Err(error)
+  }
 }
 
 // TESTS
@@ -335,6 +330,32 @@ fn test_parse_complex_neg_int_int() {
   let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(-35),IntFloat::Integer(20));
   let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
   let actual = parse_complex(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
+}
+
+
+#[test]
+fn test_parse_id() {
+  let string = "str1";
+  let input = &reverse_line(string);
+  let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
+  let expected: Result<(&str, APL_convertor::ast::Identifier), nom::error::Error<&str>> = Ok(("",output));
+  let actual = parse_id(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  // assert_eq!(actual,expected);
+}
+
+
+#[test]
+fn test_parse_id_error() {
+  let string = "2str1";
+  let input = &reverse_line(string);
+  // let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
+  let expected : Result<(&str, APL_convertor::ast::Identifier), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "1rts2", code: nom::error::ErrorKind::Alpha }));
+  let actual = parse_id(input);
   println!("Actual: {:?}", actual);
   println!("Expected: {:?}", expected);
   // assert_eq!(actual,expected);
