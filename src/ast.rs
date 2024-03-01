@@ -94,8 +94,8 @@ pub enum Vector {
 
 #[derive(Debug)]
 pub enum Scalar {
-    IntFloat(IntFloat),
     Complex(Complex ),
+    IntFloat(IntFloat),
     Identifier(Identifier),
 }
 #[derive(Debug)]

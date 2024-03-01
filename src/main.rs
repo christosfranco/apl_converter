@@ -132,7 +132,6 @@ fn main() -> Result<(), Box<dyn StdError>>  {
 
 
 //// SCALAR PARSERS
-
 fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
   // let res = alt((terminated(digit1,tag("¯")),digit1))(input);
   match parse_negative(input) {
@@ -169,11 +168,11 @@ fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
 }
 
 /// Format Imaginary ["j","J"] Real
-fn parse_complex(input: &str) ->  IResult<&str,APL_convertor::ast::Complex> {
+fn parse_complex(input: &str) ->  IResult<&str,APL_convertor::ast::Scalar> {
   match separated_pair(parse_intfloat, tag_no_case("j"), parse_intfloat)(input) {
     Ok((remainder, (first, second))) => {
       // real part is first, i part is second
-      Ok((remainder, Complex::Complex(second,first)))
+      Ok((remainder, Scalar::Complex(Complex::Complex(second,first))))
     },
     Err(error) => Err(error)
   }
@@ -215,17 +214,21 @@ fn parse_negative(input : &str) -> IResult<&str, (&str,bool)> {
 }
 
 fn parse_intfloat(input: &str) ->  IResult<&str,APL_convertor::ast::IntFloat> {
-  alt((parse_float,
+  let res = alt((parse_float,
       parse_int),
-  ) (input)
+  ) (input);
+  match res {
+    Ok((remainder,output)) => Ok((remainder,(output))),
+    Err(error) => Err(error)
+  }
 }
 
-fn parse_id(input : &str) -> IResult<&str,APL_convertor::ast::Identifier > {
+fn parse_id(input : &str) -> IResult<&str,APL_convertor::ast::Scalar > {
   let res: IResult<&str, &str> = recognize(alphanumeric0)(input); 
   match res {
     Ok((remainder,output)) => {
       match output.chars().last().unwrap_or(' ').is_alphabetic() {
-        true => Ok((remainder,Identifier(reverse(output).to_string()))),
+        true => Ok((remainder,Scalar::Identifier(Identifier(reverse(output).to_string())))),
         false => Err(nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Alpha)))
       }
     },
@@ -233,8 +236,37 @@ fn parse_id(input : &str) -> IResult<&str,APL_convertor::ast::Identifier > {
   }
 }
 
-// TESTS
+fn parse_scalar(input:&str) -> IResult<&str,APL_convertor::ast::Scalar> {
+  let res = alt((parse_complex,parse_id))(input);
+  match res {
+    Ok((remainder,output)) => Ok((remainder, (output))),
+    Err(error) => Err(error)
+  }
+}
 
+/// end SCALAR PARSERS
+
+// vector         ::= vector* ( scalar | ( LPARENS statement RPARENS ) )
+// vector is 0 or many vectors // vector will can thus be a matrix
+
+// #[derive(Debug)]
+// pub enum Vector {
+//     Multiple(Vec<Vector>, Scalar),
+//     Scalar(Scalar),
+//     Stmt(Box<Stmt>),
+// }
+
+fn parse_vector(input:&str) -> IResult<&str, APL_convertor::ast::Vector> {
+  let vec = Vec::new();
+  let res =   (parse_intfloat)(input);
+  match res {
+    Ok((remainder, output)) => Ok((remainder,Vector::Multiple(vec,Scalar::IntFloat(output)))),
+    Err(error) => Err(error)
+  }
+}
+
+
+// TESTS
 #[test]
 fn test_parse_float() {
   // assuming lines are reversed?
