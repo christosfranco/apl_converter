@@ -273,11 +273,11 @@ fn test_parse_float() {
   let string = "312.23311";
   let input = &reverse_line(string);
   let output : APL_convertor::ast::IntFloat = IntFloat::Float((312,0.23311));
-  let expected: Result<(&str, APL_convertor::ast::IntFloat), nom::error::Error<&str>> = Ok(("",output));
+  let expected: Result<(&str, APL_convertor::ast::IntFloat),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_intfloat(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 #[test]
@@ -286,11 +286,11 @@ fn test_parse_int() {
   let string = "312";
   let input = &reverse_line(string);
   let output : APL_convertor::ast::IntFloat = IntFloat::Integer(312);
-  let expected: Result<(&str, APL_convertor::ast::IntFloat), nom::error::Error<&str>> = Ok(("",output));
+  let expected: Result<(&str, APL_convertor::ast::IntFloat),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_intfloat(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 
@@ -298,60 +298,60 @@ fn test_parse_int() {
 fn test_parse_complex_int_int() {
   let string = "31J23";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(31),IntFloat::Integer(23));
-  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar=  Scalar::Complex ( Complex::Complex(IntFloat::Integer(31),IntFloat::Integer(23)) );
+  let expected: Result<(&str, APL_convertor::ast::Scalar),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_complex(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 #[test]
 fn test_parse_complex_float_int() {
   let string = "31.23J223";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float((31,0.23)),IntFloat::Integer(223));
-  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar=  Scalar::Complex( Complex::Complex(IntFloat::Float((31,0.23)),IntFloat::Integer(223)) );
+  let expected: Result<(&str, APL_convertor::ast::Scalar),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_complex(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 #[test]
 fn test_parse_complex_int_float() {
   let string = "301J21.89";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(301),IntFloat::Float((21,0.89)));
-  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar= Scalar::Complex( Complex::Complex(IntFloat::Integer(301),IntFloat::Float((21,0.89))) );
+  let expected: Result<(&str, APL_convertor::ast::Scalar),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_complex(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 #[test]
 fn test_parse_complex_float_float() {
   let string = "35.232J20.239";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float((35,0.232)),IntFloat::Float((20,0.239)));
-  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar=  Scalar::Complex( Complex::Complex(IntFloat::Float((35,0.232)),IntFloat::Float((20,0.239))) );
+  let expected: Result<(&str, APL_convertor::ast::Scalar),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_complex(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 #[test]
 fn test_parse_complex_neg_float_float() {
   let string = "¯35.232J20.2112";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Float((-35,0.232)),IntFloat::Float((20,0.2112)));
-  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar= Scalar::Complex( Complex::Complex(IntFloat::Float((-35,0.232)),IntFloat::Float((20,0.2112))) );
+  let expected: Result<(&str, APL_convertor::ast::Scalar),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_complex(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 
@@ -359,12 +359,12 @@ fn test_parse_complex_neg_float_float() {
 fn test_parse_complex_neg_int_int() {
   let string = "¯35J20";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Complex= Complex::Complex(IntFloat::Integer(-35),IntFloat::Integer(20));
-  let expected: Result<(&str, APL_convertor::ast::Complex), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar= Scalar::Complex( Complex::Complex(IntFloat::Integer(-35),IntFloat::Integer(20)) );
+  let expected: Result<(&str, APL_convertor::ast::Scalar),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_complex(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 
@@ -372,12 +372,12 @@ fn test_parse_complex_neg_int_int() {
 fn test_parse_id() {
   let string = "str1";
   let input = &reverse_line(string);
-  let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
-  let expected: Result<(&str, APL_convertor::ast::Identifier), nom::error::Error<&str>> = Ok(("",output));
+  let output : APL_convertor::ast::Scalar= Scalar::Identifier( Identifier("str1".to_string()));
+  let expected: Result<(&str, APL_convertor::ast::Scalar), nom::Err<nom::error::Error<&str>>> = Ok(("",output));
   let actual = parse_id(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected);
 }
 
 
@@ -386,21 +386,20 @@ fn test_parse_id_error() {
   let string = "2str1";
   let input = &reverse_line(string);
   // let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
-  let expected : Result<(&str, APL_convertor::ast::Identifier), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "1rts2", code: nom::error::ErrorKind::Alpha }));
+  let expected : Result<(&str, APL_convertor::ast::Scalar), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "1rts2", code: nom::error::ErrorKind::Alpha }));
   let actual = parse_id(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
 
 #[test]
 fn test_parse_id_error_panic() {
   let string: &str = "-";
   let input = &reverse_line(string);
-  // let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
-  let expected : Result<(&str, APL_convertor::ast::Identifier), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "-", code: nom::error::ErrorKind::Alpha }));
+  let expected : Result<(&str, APL_convertor::ast::Scalar), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "-", code: nom::error::ErrorKind::Alpha }));
   let actual = parse_id(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
-  // assert_eq!(actual,expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
+   assert_eq!(actual,expected);
 }
