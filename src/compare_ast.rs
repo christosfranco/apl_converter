@@ -81,8 +81,8 @@ impl PartialEq for F {
 impl PartialEq for Vector {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Vector::Multiple(vec1, scalar1), Vector::Multiple(vec2, scalar2)) => {
-                vec1 == vec2 && scalar1 == scalar2
+            (Vector::Multiple(vec1), Vector::Multiple(vec2)) => {
+                vec1 == vec2 
             }
             (Vector::Scalar(scalar1), Vector::Scalar(scalar2)) => scalar1 == scalar2,
             (Vector::Stmt(box_stmt1), Vector::Stmt(box_stmt2)) => box_stmt1 == box_stmt2,

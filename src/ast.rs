@@ -37,7 +37,7 @@ pub enum StmtLst {
 
 #[derive(Debug)]
 pub enum Stmt {
-    Assignment(Vector, Identifier),
+    Assignment(Vector, Scalar),
     Function(Vector, Function),
     Vector(Vector),
     VectorFunction(Vector, Function, Vector)
@@ -87,7 +87,7 @@ pub enum F {
 
 #[derive(Debug)]
 pub enum Vector {
-    Multiple(Vec<Vector>, Scalar),
+    Multiple(Vec<Vector>),
     Scalar(Scalar),
     Stmt(Box<Stmt>),
 }

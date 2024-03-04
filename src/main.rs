@@ -1,52 +1,9 @@
 extern crate nom;
 use std::collections::HashMap;
 use nom::{
-  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, char, digit1, newline}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, sequence::{preceded, separated_pair, terminated, tuple}, Err, IResult
+  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, char, digit1, multispace0, newline}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, sequence::{preceded, separated_pair, terminated, tuple}, Err, IResult
 };
 use APL_convertor::ast::*;
-
-
-fn parse_assign(input: &str) -> IResult<&str,(&str,&str)>  {
-  separated_pair(tag("str"), char('←'), tag("'Hello world'"))(input)
-}
-
-
-
-fn parse_comment_content(input:&str) -> IResult<&str, &str> {
-  preceded(tag("⍝"),take_until( "\n"))(input)
-}
-
-fn parse_comment(input: &str) -> IResult<&str,&str>   {
-  parse_comment_content(input)
-}
-
-fn parse_line(input: &str) -> IResult<&str,&str>   {
-  Ok((input,&"str"))
-}
-
-
-fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
-  let mut vec = Vec::new();
-  if let Ok((remainder,output)) = alt((
-    parse_comment,
-    parse_comment,
-  ) 
-  )(input) {
-    vec.push(output);
-    return Ok((remainder,vec));
-  } else {
-    return Ok(("",vec));
-  };
-}
-
-fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
-  let mut vec_lines = Vec::new();
-  let mut vec_line = Vec::new();
-  let stmt = Stmt::Vector(Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(2))));
-  vec_line.push(stmt);
-  vec_lines.push(vec_line);
-  Ok(("", vec_lines))
-}
 
 fn reverse(s: &str) -> String {
   s.chars().rev().collect()
@@ -130,6 +87,46 @@ fn main() -> Result<(), Box<dyn StdError>>  {
   return Ok(());
 }
 
+
+
+
+
+
+fn parse_comment_content(input:&str) -> IResult<&str, &str> {
+  preceded(tag("⍝"),take_until( "\n"))(input)
+}
+
+fn parse_comment(input: &str) -> IResult<&str,&str>   {
+  parse_comment_content(input)
+}
+
+fn parse_line(input: &str) -> IResult<&str,&str>   {
+  Ok((input,&"str"))
+}
+
+
+fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
+  let mut vec = Vec::new();
+  if let Ok((remainder,output)) = alt((
+    parse_comment,
+    parse_comment,
+  ) 
+  )(input) {
+    vec.push(output);
+    return Ok((remainder,vec));
+  } else {
+    return Ok(("",vec));
+  };
+}
+
+fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
+  let mut vec_lines = Vec::new();
+  let mut vec_line = Vec::new();
+  let stmt = Stmt::Vector(Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(2))));
+  vec_line.push(stmt);
+  vec_lines.push(vec_line);
+  Ok(("", vec_lines))
+}
 
 //// SCALAR PARSERS
 fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
@@ -240,7 +237,13 @@ fn parse_scalar(input:&str) -> IResult<&str,APL_convertor::ast::Scalar> {
   let res = alt((parse_complex,parse_id))(input);
   match res {
     Ok((remainder,output)) => Ok((remainder, (output))),
-    Err(error) => Err(error)
+    Err(error) => {
+      let res = parse_intfloat(input);
+      match res {
+          Ok((remainder,output)) => Ok((remainder,Scalar::IntFloat(output))),
+          Err(error) => Err(error),
+      }
+    }
   }
 }
 
@@ -256,15 +259,109 @@ fn parse_scalar(input:&str) -> IResult<&str,APL_convertor::ast::Scalar> {
 //     Stmt(Box<Stmt>),
 // }
 
-fn parse_vector(input:&str) -> IResult<&str, APL_convertor::ast::Vector> {
-  let vec = Vec::new();
-  let res =   (parse_intfloat)(input);
-  match res {
-    Ok((remainder, output)) => Ok((remainder,Vector::Multiple(vec,Scalar::IntFloat(output)))),
-    Err(error) => Err(error)
+fn parse_vector(input: &str) -> IResult<&str, APL_convertor::ast::Vector> {
+  let mut vec = Vec::new();
+  let mut remainder = input;
+
+  // Loop until parsing fails
+  loop {
+      let (rem, scalar) = match parse_scalar(remainder) {
+          Ok((rem, output)) => (rem, output),
+          Err(_) => break, // Break the loop if parsing fails
+      };
+
+      // Parse optional whitespace after the scalar
+      let (rem, _) = multispace0(rem)?;
+
+      vec.push(APL_convertor::ast::Vector::Scalar(scalar));
+      remainder = rem;
   }
+
+  // reverse the vector to account for R to L parsing
+  vec.reverse();
+
+  Ok((remainder, APL_convertor::ast::Vector::Multiple(vec)))
 }
 
+fn parse_statement(input: &str) -> IResult<&str,(Vector,Scalar)>  {
+  separated_pair(parse_vector, char('←'), parse_id)(input)
+}
+
+
+
+// TODO space separated
+#[test]
+fn test_parse_assign() {
+  let string = "id1←1";
+  let input = &reverse_line(string);
+  let mut vec = Vec::new();
+  let fst = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(1)));
+  vec.push(fst);
+  // let snd = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(1)));
+  // vec.push(snd);
+  let id: Scalar = Scalar::Identifier(Identifier("id1".to_string()));
+  let output : (Vector,Scalar) = (Vector::Multiple(vec),id);
+  let expected: Result<(&str, (Vector,Scalar)),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
+  let actual = parse_statement(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
+}
+
+// TODO space separated
+#[test]
+fn test_parse_assign_multiple() {
+  let string = "id1←1 1J2.03";
+  let input = &reverse_line(string);
+  let mut vec = Vec::new();
+  let fst = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(1)));
+  vec.push(fst);
+  let snd = Vector::Scalar(Scalar::Complex(Complex::Complex(IntFloat::Integer(1),IntFloat::Float((2,0.03)))));
+  vec.push(snd);
+  let id: Scalar = Scalar::Identifier(Identifier("id1".to_string()));
+  let output : (Vector,Scalar) = (Vector::Multiple(vec),id);
+  let expected: Result<(&str, (Vector,Scalar)),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
+  let actual = parse_statement(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
+}
+
+#[test]
+fn test_parse_vector_single() {
+  let string = "1";
+  let input = &reverse_line(string);
+  let mut vec = Vec::new();
+  let fst = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(1)));
+  vec.push(fst);
+  // let snd = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(2)));
+  // vec.push(snd);
+  let output : Vector = Vector::Multiple(vec);
+  let expected: Result<(&str, Vector),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
+  let actual = parse_vector(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
+}
+
+
+// TODO
+#[test]
+fn test_parse_vector_multiple() {
+  let string = "1 2";
+  let input = &reverse_line(string);
+  let mut vec = Vec::new();
+  let fst = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(1)));
+  vec.push(fst);
+  let snd = Vector::Scalar(Scalar::IntFloat(IntFloat::Integer(2)));
+  vec.push(snd);
+  let output : Vector = Vector::Multiple(vec);
+  let expected: Result<(&str, Vector),nom::Err<nom::error::Error<&str>>> = Ok(("",output));
+  let actual = parse_vector(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
+}
 
 // TESTS
 #[test]
