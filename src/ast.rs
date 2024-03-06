@@ -32,7 +32,7 @@ use std::fmt;
 
 /// recursive parsing structure instead of 0 or many
 // program        ::= EOF statement_list
-// statement_list ::= (statement_list "⋄" | None) statement
+// statement_list ::= (statement "⋄" | None) statement
 // statement      ::= (left_statement | None)     vector
 // left_statement ::= Vec<( ID "←" | vector function | function )>
 // function       ::= function mop | function dop f | f
@@ -50,6 +50,8 @@ use std::fmt;
 // vector         ::= vector scalar scalar
 
 
+
+// use many0 like in parse_statement
 // parse stmt
 // parse "⋄" if true
     // then parse stmtlst
@@ -57,7 +59,7 @@ use std::fmt;
 // statement_list ::= (statement "⋄") (statement "⋄") statement
 #[derive(Debug)]
 pub enum StmtLst {
-    Statement(Option<Box<StmtLst>>,Stmt),
+    Statement(Option<Vec<Stmt>>,Stmt),
 }
 
 #[derive(Debug)]

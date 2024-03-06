@@ -8,7 +8,7 @@ impl PartialEq for StmtLst {
             // (StmtLst::Lst(stmt1, box_stmtlst1), StmtLst::Lst(stmt2, box_stmtlst2)) => {
             //     stmt1 == stmt2 && *box_stmtlst1 == *box_stmtlst2
             // }
-            _ => false,
+            // _ => false,
         }
     }
 }
@@ -20,7 +20,7 @@ impl PartialEq for Stmt {
             (Stmt::LeftStmt(vector1, left_stmts1), Stmt::LeftStmt(vector2, left_stmts2)) => {
                 vector1 == vector2 && left_stmts1 == left_stmts2
             }
-            _ => false,
+            // _ => false,
         }
     }
 }

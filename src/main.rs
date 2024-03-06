@@ -1,28 +1,10 @@
 extern crate nom;
 use std::collections::HashMap;
 use nom::{
-  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, char, digit1, multispace0, newline, space0, space1}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, sequence::{self, preceded, separated_pair, terminated, tuple}, Err, IResult
+  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, char, digit1, multispace0, newline, space0, space1}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, multi::{many0, many1}, sequence::{self, pair, preceded, separated_pair, terminated, tuple}, Err, IResult
 };
 use APL_convertor::ast::*;
 
-fn reverse(s: &str) -> String {
-  s.chars().rev().collect()
-}
-
-fn split_str_reverse_lines(s: &str) -> Vec<String> {
-// Split the string into lines
-  let vec_lines: Vec<String> = s.lines()
-  .map(|line| reverse(line))
-  .collect();
-  // let mut vec_lines = Vec::new();
-  // vec_lines.push("something");
-   // Print the reversed lines
-   return vec_lines;
-}
-
-fn reverse_line(input: &str) -> String {
-  reverse(input)
-}
 
 use std::error::Error as StdError;
 fn main() -> Result<(), Box<dyn StdError>>  {
@@ -88,23 +70,13 @@ fn main() -> Result<(), Box<dyn StdError>>  {
 }
 
 
-
-
-
-
+// OLD PARSERS
 fn parse_comment_content(input:&str) -> IResult<&str, &str> {
   preceded(tag("⍝"),take_until( "\n"))(input)
 }
-
 fn parse_comment(input: &str) -> IResult<&str,&str>   {
   parse_comment_content(input)
 }
-
-fn parse_line(input: &str) -> IResult<&str,&str>   {
-  Ok((input,&"str"))
-}
-
-
 fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
   let mut vec = Vec::new();
   if let Ok((remainder,output)) = alt((
@@ -118,7 +90,6 @@ fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
     return Ok(("",vec));
   };
 }
-
 fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
   let mut vec_lines = Vec::new();
   let mut vec_line = Vec::new();
@@ -127,6 +98,8 @@ fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
   vec_lines.push(vec_line);
   Ok(("", vec_lines))
 }
+// END OLD PARSERS
+
 
 //// SCALAR PARSERS
 fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
@@ -247,58 +220,8 @@ fn parse_scalar(input:&str) -> IResult<&str,APL_convertor::ast::Scalar> {
   }
 }
 
+
 /// end SCALAR PARSERS
-
-// vector         ::= vector* ( scalar | ( LPARENS statement RPARENS ) )
-// vector is 0 or many vectors // vector will can thus be a matrix
-
-// #[derive(Debug)]
-// pub enum Vector {
-//     Multiple(Vec<Vector>, Scalar),
-//     Scalar(Scalar),
-//     Stmt(Box<Stmt>),
-// }
-
-// fn parse_vector(input: &str) -> IResult<&str, APL_convertor::ast::Vector> {
-//   let mut vec = Vec::new();
-//   let mut remainder = input;
-
-//   // Loop until parsing fails
-//   loop {
-//       let (rem, scalar) = match parse_scalar(remainder) {
-//           Ok((rem, output)) => (rem, output),
-//           Err(_) => break, // Break the loop if parsing fails
-//       };
-
-//       // Parse optional whitespace after the scalar
-//       let (rem, _) = multispace0(rem)?;
-
-//       vec.push(APL_convertor::ast::Vector::Scalar(None,scalar));
-//       remainder = rem;
-//   }
-
-//   // reverse the vector to account for R to L parsing
-//   vec.reverse();
-
-//   Ok((remainder, APL_convertor::ast::Vector::Scalar(None,)))
-// }
-
-// fn parse_vector(input: &str) -> IResult<&str, APL_convertor::ast::Vector> {
-//    match parse_scalar(input) {
-//           Ok((rem, output)) =>  { 
-//               let (rem, _) = multispace0(rem)?;
-//               Ok((rem, APL_convertor::ast::Vector::Scalar(None,output)))
-//            },
-//           Err(error) => Err(error), 
-//     }
-// }
-
-// fn parse_scalar_or_statement(input: &str) -> IResult<&str, APL_convertor::ast::Vector> {
-//   match parse_scalar(input) {
-//     Ok((remainder,output)) => Ok((remainder,Scalar(None,output))),
-//     Err(error) => Err(error)
-//   }
-// }
 
 fn parse_vector(input: &str) -> IResult<&str, APL_convertor::ast::Vector> {
   // println!("Parsing vector") ;
@@ -327,22 +250,154 @@ fn parse_vector(input: &str) -> IResult<&str, APL_convertor::ast::Vector> {
   };
 }
 
-
-
+fn parse_assignment(input: &str) -> IResult<&str, LeftStmt> {
+  let parse_id_with_space = preceded(space0, parse_id);
+  let (input, id1) = preceded(tag("←"), parse_id_with_space)(input)?;
+  Ok((input, LeftStmt::Assignment(id1)))
+}
 
 fn parse_statement(input: &str) -> IResult<&str, Stmt> {
   // Define parsers with optional whitespace
   let parse_vector_with_space = preceded(space0, parse_vector);
-  let parse_id_with_space = preceded(space0, parse_id);
+  // let parse_id_with_space = preceded(space0, parse_id);
+
+  let many0_id_parser = many0(preceded(space0, parse_assignment));
+  let res = terminated(pair(parse_vector_with_space, opt(many0_id_parser)),space0)(input);
+  // Todo make alternative for function and vectorfunction
 
   // Use `separated_pair` with `terminated` to parse statement with whitespace checks
-  let res= terminated(separated_pair(parse_vector_with_space, preceded(space0,char('←')), parse_id_with_space), space0)(input);
+  // let res= terminated(separated_pair(parse_vector_with_space, preceded(space0,char('←')), parse_id_with_space), space0)(input);
   match res {
-    Ok((remainder,(vector,scalar))) => {
-      Ok((remainder,Stmt::LeftStmt(vector,Some(vec![LeftStmt::Assignment(scalar)]))))
+    Ok((remainder,(vector,option_vec_leftstmt))) => {
+      // match option_vec_leftstmt {
+      //   Some(())
+      // }
+      Ok((remainder,Stmt::LeftStmt(vector,option_vec_leftstmt)))
     },
     Err(error) => Err(error)
   }
+}
+
+
+
+fn parse_statement_list(input: &str) -> IResult<&str,StmtLst>   {
+  match parse_statement(input) {
+    Ok((remainder,output)) => 
+      match many1(preceded(char('⋄'), parse_statement))(remainder) {
+        Ok((remainder, output_vec_stmt )) => Ok((remainder, StmtLst::Statement(Some(output_vec_stmt), output))),
+        Err(_error) => Ok((remainder,StmtLst::Statement(None, output))),
+      }
+    // it is only an error if it fails to pass the first statement
+    Err(error) => Err(error)
+  }
+}
+
+fn parse_line(input: &str) -> IResult<&str,StmtLst>   {
+  parse_statement_list(input)
+}
+
+
+fn reverse(s: &str) -> String {
+  s.chars().rev().collect()
+}
+
+fn split_str_reverse_lines(s: &str) -> Vec<String> {
+  // Split the string into lines
+    let vec_lines: Vec<String> = s.lines()
+    .map(|line| reverse(line).to_string()).collect()
+    ;
+    // let mut vec_lines = Vec::new();
+    // vec_lines.push("something");
+     // Print the reversed lines
+     return vec_lines;
+}
+
+fn reverse_line(input: &str) -> String {
+  reverse(input)
+}
+
+
+
+
+
+// #[test]
+// fn test_parse_lines() {
+//   let string = "  id2 ← 2 ⋄ id1 ←  1 ";
+  
+//   // reverse the input as references to adhere to the borrowchecker
+//   let rev_string = split_str_reverse_lines(string) ;
+
+//   let mut input: Vec<&str> = Vec::new(); 
+//   for line in rev_string.iter() {
+//     input.push(line.as_str());
+//   }
+
+
+//   let snd = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+//   let assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+
+//   let expected: Result<(&str, Stmt),nom::Err<nom::error::Error<&str>>> = Ok(("",Stmt::LeftStmt(snd, assignment)));
+
+//   let actual = parse_statement_list(input);
+//   println!("Actual: {:?}", actual);
+//   println!("Expected: {:?}", expected);
+//   assert_eq!(actual,expected); 
+// }
+
+
+#[test]
+fn test_parse_stmt_lst() {
+  let string = "  id3 ← 3 ⋄  id2 ←id1 ←  1 ";
+  let input = &reverse_line(string);
+
+  // RHS of Statement
+  let rhs_vec = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+  let rhs_assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+
+  // LHS of Statement
+  let lhs_vec = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(3)));
+  let lhs_assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id3".to_string())))]);
+  let lhs : Option<Vec<Stmt>> = Some(vec![Stmt::LeftStmt(lhs_vec,lhs_assignment)]); 
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(lhs,Stmt::LeftStmt(rhs_vec, rhs_assignment))));
+
+  let actual = parse_statement_list(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
+}
+
+#[test]
+fn test_parse_stmt_lst_single() {
+  let string = "   id2 ←id1 ←  1 ";
+  let input = &reverse_line(string);
+
+  let snd = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+  let assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(None,Stmt::LeftStmt(snd, assignment))));
+
+  let actual = parse_statement_list(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
+}
+
+
+
+#[test]
+fn test_parse_multi_assign_space() {
+  let string = "  id2 ←id1 ←  1 ";
+  let input = &reverse_line(string);
+  
+  let snd = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+  let assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+
+  let expected: Result<(&str, Stmt),nom::Err<nom::error::Error<&str>>> = Ok(("",Stmt::LeftStmt(snd, assignment)));
+
+  let actual = parse_statement(input);
+  println!("Actual: {:?}", actual);
+  println!("Expected: {:?}", expected);
+  assert_eq!(actual,expected); 
 }
 
 
