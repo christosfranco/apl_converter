@@ -29,18 +29,48 @@ use std::fmt;
 // DYADIC_OPS = set('⍥@⍣⍤∘.⌺⍠') # FIXME: this should use Voc!!
 // MONADIC_OPS = set('\\/⌿⍀¨⍨')
 
+
+/// recursive parsing structure instead of 0 or many
+// program        ::= EOF statement_list
+// statement_list ::= (statement_list "⋄" | None) statement
+// statement      ::= (left_statement | None)     vector
+// left_statement ::= Vec<( ID "←" | vector function | function )>
+// function       ::= function mop | function dop f | f
+// dop            ::= "∘" | "⍥"
+// mop            ::= "⍨" | "¨"
+// f              ::= "+" | "-" | "×" | "÷" | "⌈" | "⌊" |
+//                  | "⊢" | "⊣" | "⍳" | "<" | "≤" | "=" |
+//                  | "≥" | ">" | "≠" | "~" | "⊂" | LPARENS function RPARENS | dfn | fref
+// dfn            ::= LBRACE statements RBRACE
+// vector         ::= (vector | None) ( scalar | ( LPARENS statement RPARENS ) )
+// scalar         ::= INTEGER | FLOAT | COMPLEX | ID
+
+
+// vector         ::= vector vector scalar
+// vector         ::= vector scalar scalar
+
+
+// parse stmt
+// parse "⋄" if true
+    // then parse stmtlst
+
+// statement_list ::= (statement "⋄") (statement "⋄") statement
 #[derive(Debug)]
 pub enum StmtLst {
-    Statement(Stmt),
-    Lst(Stmt,Box<StmtLst>),
+    Statement(Option<Box<StmtLst>>,Stmt),
 }
 
 #[derive(Debug)]
 pub enum Stmt {
-    Assignment(Vector, Scalar),
-    Function(Vector, Function),
-    Vector(Vector),
-    VectorFunction(Vector, Function, Vector)
+    LeftStmt(Vector, Option<Vec<LeftStmt>>),
+}
+
+#[derive(Debug)]
+pub enum LeftStmt {
+    // TODO refactor to match type Identifier instead of Scalar
+    Assignment(Scalar),
+    Function(Function),
+    VectorFunction(Vector,Function)
 }
 
 #[derive(Debug)]
@@ -85,11 +115,13 @@ pub enum F {
     Indices,
 }
 
+// 0 or many vectors
+// call parse_vector recursively
 #[derive(Debug)]
 pub enum Vector {
-    Multiple(Vec<Vector>),
-    Scalar(Scalar),
-    Stmt(Box<Stmt>),
+    // Multiple(Vec<Vector>),
+    Scalar(Option<Box<Vector>>, Scalar),
+    Stmt(Option<Box<Vector>>,Box<Stmt>),
 }
 
 #[derive(Debug)]

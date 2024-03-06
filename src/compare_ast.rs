@@ -4,10 +4,10 @@ use crate::ast::*;
 impl PartialEq for StmtLst {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (StmtLst::Statement(stmt1), StmtLst::Statement(stmt2)) => stmt1 == stmt2,
-            (StmtLst::Lst(stmt1, box_stmtlst1), StmtLst::Lst(stmt2, box_stmtlst2)) => {
-                stmt1 == stmt2 && *box_stmtlst1 == *box_stmtlst2
-            }
+            (StmtLst::Statement(stmtlst1, stmt1), StmtLst::Statement(stmtlst2,stmt2)) => stmt1 == stmt2 && stmtlst1 == stmtlst2,
+            // (StmtLst::Lst(stmt1, box_stmtlst1), StmtLst::Lst(stmt2, box_stmtlst2)) => {
+            //     stmt1 == stmt2 && *box_stmtlst1 == *box_stmtlst2
+            // }
             _ => false,
         }
     }
@@ -17,16 +17,28 @@ impl PartialEq for StmtLst {
 impl PartialEq for Stmt {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Stmt::Assignment(vec1, id1), Stmt::Assignment(vec2, id2)) => vec1 == vec2 && id1 == id2,
-            (Stmt::Function(vec1, func1), Stmt::Function(vec2, func2)) => vec1 == vec2 && func1 == func2,
-            (Stmt::Vector(vec1), Stmt::Vector(vec2)) => vec1 == vec2,
-            (Stmt::VectorFunction(vec1, func1, vec2), Stmt::VectorFunction(vec3, func2, vec4)) => {
-                vec1 == vec3 && func1 == func2 && vec2 == vec4
+            (Stmt::LeftStmt(vector1, left_stmts1), Stmt::LeftStmt(vector2, left_stmts2)) => {
+                vector1 == vector2 && left_stmts1 == left_stmts2
             }
             _ => false,
         }
     }
 }
+
+// TODO can the order of the leftstatements be permutated (different order) and still be equal??
+impl PartialEq for LeftStmt {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (LeftStmt::Assignment(id1), LeftStmt::Assignment(id2)) => id1 == id2,
+            (LeftStmt::Function(func1), LeftStmt::Function(func2)) => func1 == func2,
+            (LeftStmt::VectorFunction(vec1, func1), LeftStmt::VectorFunction(vec2, func2)) => {
+                vec1 == vec2 && func1 == func2
+            }
+            _ => false,
+        }
+    }
+}
+
 
 // Implement PartialEq for Function enum
 impl PartialEq for Function {
@@ -81,11 +93,8 @@ impl PartialEq for F {
 impl PartialEq for Vector {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Vector::Multiple(vec1), Vector::Multiple(vec2)) => {
-                vec1 == vec2 
-            }
-            (Vector::Scalar(scalar1), Vector::Scalar(scalar2)) => scalar1 == scalar2,
-            (Vector::Stmt(box_stmt1), Vector::Stmt(box_stmt2)) => box_stmt1 == box_stmt2,
+            (Vector::Scalar(vec1,scalar1), Vector::Scalar(vec2,scalar2)) => scalar1 == scalar2 && vec1 == vec2,
+            (Vector::Stmt(vec1,box_stmt1), Vector::Stmt(vec2,box_stmt2)) => box_stmt1 == box_stmt2 && vec1 == vec2,
             _ => false,
         }
     }
