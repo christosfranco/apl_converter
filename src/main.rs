@@ -26,8 +26,6 @@ fn main() -> Result<(), Box<dyn StdError>>  {
   str ← 'Hello world'
   str";
 
-  
-
   // let code = "⍝testapl\n";
   match parse_apl(code) {
     Ok((remainder,output)) => {
@@ -46,10 +44,6 @@ fn main() -> Result<(), Box<dyn StdError>>  {
   for line in vec_lines.iter() {
     ref_vec_lines.push(line.as_str());
   }
-  // for line in &vec_lines {
-  //   println!("{}", line);
-  // }
-
 
   match parse_lines(ref_vec_lines) {
     Ok((remainder,output)) => {
@@ -60,12 +54,6 @@ fn main() -> Result<(), Box<dyn StdError>>  {
       println!("{}",error);
     }
   }
-  // if let Ok((remainder,output)) = parse_apl(code) {
-  //   println!("{}",remainder);
-  //   println!("{}",output);
-  // } else if let Error(error) = parse_apl(code) {
-    
-  // };
   return Ok(());
 }
 
@@ -279,24 +267,6 @@ fn parse_statement(input: &str) -> IResult<&str, Stmt> {
 }
 
 
-
-fn parse_statement_list(input: &str) -> IResult<&str,StmtLst>   {
-  match parse_statement(input) {
-    Ok((remainder,output)) => 
-      match many1(preceded(char('⋄'), parse_statement))(remainder) {
-        Ok((remainder, output_vec_stmt )) => Ok((remainder, StmtLst::Statement(Some(output_vec_stmt), output))),
-        Err(_error) => Ok((remainder,StmtLst::Statement(None, output))),
-      }
-    // it is only an error if it fails to pass the first statement
-    Err(error) => Err(error)
-  }
-}
-
-fn parse_line(input: &str) -> IResult<&str,StmtLst>   {
-  parse_statement_list(input)
-}
-
-
 fn reverse(s: &str) -> String {
   s.chars().rev().collect()
 }
@@ -317,32 +287,117 @@ fn reverse_line(input: &str) -> String {
 }
 
 
+fn parse_statement_list(input: &str) -> IResult<&str,StmtLst>   {
+  match parse_statement(input) {
+    Ok((remainder,output)) => 
+      match many1(preceded(char('⋄'), parse_statement))(remainder) {
+        Ok((remainder, output_vec_stmt )) => Ok((remainder, StmtLst::Statement(Some(output_vec_stmt), output))),
+        Err(_error) => Ok((remainder,StmtLst::Statement(None, output))),
+      }
+    // it is only an error if it fails to pass the first statement
+    Err(error) => Err(error)
+  }
+}
+
+fn parse_line(input: &str) -> IResult<&str,StmtLst>   {
+  parse_statement_list(input)
+}
+// Result<(&str, Vec<Result<(&str, APL_convertor::ast::StmtLst), nom::Err<nom::error::Error<&str>>>>), _>
+fn parse_lines2(input: Vec<&str>) -> Vec<IResult<&str,StmtLst>> {
+  let mut vec_lines: Vec<IResult<&str,StmtLst> > = Vec::new();
+
+  for line in input {
+    vec_lines.push(parse_line(line))
+  }
+  vec_lines
+}
 
 
 
-// #[test]
-// fn test_parse_lines() {
-//   let string = "  id2 ← 2 ⋄ id1 ←  1 ";
+
+#[test]
+fn test_parse_lines_multiples() {
+  // let string = "  id3 ← 3 ⋄  id2 ←id1 ←  1";
+  let string = "  id3 ← 3 ⋄  id2 ←id1 ←  1
+     id2 ←id1 ←  1 ";
+  // reverse the input as references to adhere to the borrowchecker
+  let rev_string = split_str_reverse_lines(string) ;
+
+  let mut input: Vec<&str> = Vec::new(); 
+  for line in rev_string.iter() {
+    input.push(line.as_str());
+  }
+
+  // Line 0
+  // RHS of Statement
+  let rhs_vec = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+  let rhs_assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+
+  // LHS of Statement
+  let lhs_vec = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(3)));
+  let lhs_assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id3".to_string())))]);
+  let lhs : Option<Vec<Stmt>> = Some(vec![Stmt::LeftStmt(lhs_vec,lhs_assignment)]); 
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(lhs,Stmt::LeftStmt(rhs_vec, rhs_assignment))));
   
-//   // reverse the input as references to adhere to the borrowchecker
-//   let rev_string = split_str_reverse_lines(string) ;
+  // Line 1
+  let snd = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+  let assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+  let expected1: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(None,Stmt::LeftStmt(snd, assignment))));
+  
+  // Complete vector with all lines
+  let mut expected_vec = Vec::new();
+  expected_vec.push(expected);
+  expected_vec.push(expected1);
 
-//   let mut input: Vec<&str> = Vec::new(); 
-//   for line in rev_string.iter() {
-//     input.push(line.as_str());
-//   }
+  let actual_vec = parse_lines2(input);
+  // println!("Actual: {:?}", actual_vec);
+  // println!("Expected: {:?}", expected_vec);
+
+  assert_eq!(actual_vec.len(),expected_vec.len());
+
+  for (actual, expected) in actual_vec.iter().zip(expected_vec.iter()) {
+    assert_eq!(actual, expected);
+}
+}
 
 
-//   let snd = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
-//   let assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+#[test]
+fn test_parse_lines() {
+  let string = "  id3 ← 3 ⋄  id2 ←id1 ←  1";
+  // let string = "  id3 ← 3 ⋄  id2 ←id1 ←  1 \n   id2 ←id1 ←  1 ";
+  
 
-//   let expected: Result<(&str, Stmt),nom::Err<nom::error::Error<&str>>> = Ok(("",Stmt::LeftStmt(snd, assignment)));
+  // reverse the input as references to adhere to the borrowchecker
+  let rev_string = split_str_reverse_lines(string) ;
 
-//   let actual = parse_statement_list(input);
-//   println!("Actual: {:?}", actual);
-//   println!("Expected: {:?}", expected);
-//   assert_eq!(actual,expected); 
-// }
+  let mut input: Vec<&str> = Vec::new(); 
+  for line in rev_string.iter() {
+    input.push(line.as_str());
+  }
+
+  // RHS of Statement
+  let rhs_vec = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
+  let rhs_assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id1".to_string()))),LeftStmt::Assignment(Scalar::Identifier( Identifier("id2".to_string())))]);
+
+  // LHS of Statement
+  let lhs_vec = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(3)));
+  let lhs_assignment : Option<Vec<LeftStmt>>= Some(vec![LeftStmt::Assignment(Scalar::Identifier( Identifier("id3".to_string())))]);
+  let lhs : Option<Vec<Stmt>> = Some(vec![Stmt::LeftStmt(lhs_vec,lhs_assignment)]); 
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(lhs,Stmt::LeftStmt(rhs_vec, rhs_assignment))));
+
+  let mut expected_vec = Vec::new();
+  expected_vec.push(expected);
+
+  let actual_vec = parse_lines2(input);
+  // println!("Actual: {:?}", actual_vec);
+  // println!("Expected: {:?}", expected_vec);
+
+  assert_eq!(actual_vec.len(),expected_vec.len());
+
+  for (actual, expected) in actual_vec.iter().zip(expected_vec.iter()) {
+    assert_eq!(actual, expected);
+}
+}
 
 
 #[test]
@@ -361,8 +416,8 @@ fn test_parse_stmt_lst() {
   let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(lhs,Stmt::LeftStmt(rhs_vec, rhs_assignment))));
 
   let actual = parse_statement_list(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
@@ -377,8 +432,8 @@ fn test_parse_stmt_lst_single() {
   let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(None,Stmt::LeftStmt(snd, assignment))));
 
   let actual = parse_statement_list(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
@@ -395,8 +450,8 @@ fn test_parse_multi_assign_space() {
   let expected: Result<(&str, Stmt),nom::Err<nom::error::Error<&str>>> = Ok(("",Stmt::LeftStmt(snd, assignment)));
 
   let actual = parse_statement(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
@@ -412,8 +467,8 @@ fn test_parse_assign_space() {
   let expected: Result<(&str, Stmt),nom::Err<nom::error::Error<&str>>> = Ok(("",Stmt::LeftStmt(snd, assignment)));
 
   let actual = parse_statement(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
@@ -430,8 +485,8 @@ fn test_parse_assign_multiple_space() {
   let expected: Result<(&str, Stmt),nom::Err<nom::error::Error<&str>>> = Ok(("",Stmt::LeftStmt(fst, assignment)));
 
   let actual = parse_statement(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
@@ -442,8 +497,8 @@ fn test_parse_vector_single() {
   let fst = Vector::Scalar(None,Scalar::IntFloat(IntFloat::Integer(1)));
   let expected: Result<(&str, Vector),nom::Err<nom::error::Error<&str>>> = Ok(("",fst));
   let actual = parse_vector(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
@@ -457,8 +512,8 @@ fn test_parse_vector_multiple() {
   let fst = Vector::Scalar(Some(Box::new(snd)),Scalar::IntFloat(IntFloat::Integer(2)));
   let expected: Result<(&str, Vector),nom::Err<nom::error::Error<&str>>> = Ok(("",fst));
   let actual = parse_vector(input);
-  println!("Actual: {:?}", actual);
-  println!("Expected: {:?}", expected);
+  // println!("Actual: {:?}", actual);
+  // println!("Expected: {:?}", expected);
   assert_eq!(actual,expected); 
 }
 
