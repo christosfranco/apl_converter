@@ -10,14 +10,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "This job is now running on a ${{ runner.os }} server hosted on GitHub"
       - run: echo "Name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      
-
       - uses: actions/checkout@v4
       - name: Build
         run: cargo build --verbose
