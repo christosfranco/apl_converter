@@ -249,7 +249,7 @@ fn parse_statement(input: &str) -> IResult<&str, Stmt> {
   let parse_vector_with_space = preceded(space0, parse_vector);
   // let parse_id_with_space = preceded(space0, parse_id);
 
-  let many0_id_parser = many0(preceded(space0, parse_assignment));
+  let many0_id_parser = many1(preceded(space0, parse_assignment));
   let res = terminated(pair(parse_vector_with_space, opt(many0_id_parser)),space0)(input);
   // Todo make alternative for function and vectorfunction
 
@@ -273,13 +273,11 @@ fn reverse(s: &str) -> String {
 
 fn split_str_reverse_lines(s: &str) -> Vec<String> {
   // Split the string into lines
-    let vec_lines: Vec<String> = s.lines()
-    .map(|line| reverse(line).to_string()).collect()
-    ;
+    let vec_lines: Vec<String> = s.lines().map(|line| reverse(line).to_string()).collect();
     // let mut vec_lines = Vec::new();
     // vec_lines.push("something");
      // Print the reversed lines
-     return vec_lines;
+    return vec_lines;
 }
 
 fn reverse_line(input: &str) -> String {
@@ -310,6 +308,96 @@ fn parse_lines2(input: Vec<&str>) -> Vec<IResult<&str,StmtLst>> {
     vec_lines.push(parse_line(line))
   }
   vec_lines
+}
+
+
+
+
+#[test]
+fn test_parse_matrix_nested2() {
+  let string = "7 ((8 9) 10)";
+  // reverse the input as references to adhere to the borrowchecker
+  let rev_string = split_str_reverse_lines(string) ;
+
+  let mut input: Vec<&str> = Vec::new(); 
+  for line in rev_string.iter() {
+    input.push(line.as_str());
+  }
+  let vector0 : Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(7)));
+  let vecstmt8 : Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(8)));
+  let stmt89 : Vector = Vector::Stmt(None, Box::new(Stmt::LeftStmt(Vector::Scalar(Some(Box::new(vecstmt8)), Scalar::IntFloat(IntFloat::Integer(9))),None)));
+
+  let vec10 : Vector = Vector::Scalar(Some(Box::new(stmt89)), Scalar::IntFloat(IntFloat::Integer(10)));
+  let stmt : Stmt = Stmt::LeftStmt(vec10, None); 
+  let vector: Vector = Vector::Stmt(Some(Box::new(vector0)), Box::new(stmt));
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(None, Stmt::LeftStmt(vector, None))));
+  let mut expected_vec = Vec::new();
+  expected_vec.push(expected);
+  let actual_vec = parse_lines2(input);
+  // println!("Actual: {:?}", actual_vec);
+  // println!("Expected: {:?}", expected_vec);
+  for (actual, expected) in actual_vec.iter().zip(expected_vec.iter()) {
+    assert_eq!(actual, expected);
+}
+}
+
+
+
+#[test]
+fn test_parse_matrix_nested() {
+  let string = "7 ((9) 10)";
+
+  // reverse the input as references to adhere to the borrowchecker
+  let rev_string = split_str_reverse_lines(string) ;
+
+  let mut input: Vec<&str> = Vec::new(); 
+  for line in rev_string.iter() {
+    input.push(line.as_str());
+  }
+  let vector0 : Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(7)));
+  let stmt89 : Vector = Vector::Stmt(None, Box::new(Stmt::LeftStmt(Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(9))),None)));
+  let vec10 : Vector = Vector::Scalar(Some(Box::new(stmt89)), Scalar::IntFloat(IntFloat::Integer(10)));
+  let stmt : Stmt = Stmt::LeftStmt(vec10, None); 
+  let vector: Vector = Vector::Stmt(Some(Box::new(vector0)), Box::new(stmt));
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(None, Stmt::LeftStmt(vector, None))));
+  let mut expected_vec = Vec::new();
+  expected_vec.push(expected);
+  let actual_vec = parse_lines2(input);
+  // println!("Actual: {:?}", actual_vec);
+  // println!("Expected: {:?}", expected_vec);
+
+
+  for (actual, expected) in actual_vec.iter().zip(expected_vec.iter()) {
+    assert_eq!(actual, expected);
+}
+}
+
+
+
+
+#[test]
+fn test_parse_matrix() {
+  let string = "7 (10)";
+  // reverse the input as references to adhere to the borrowchecker
+  let rev_string = split_str_reverse_lines(string) ;
+
+  let mut input: Vec<&str> = Vec::new(); 
+  for line in rev_string.iter() {
+    input.push(line.as_str());
+  }
+  let vector0 : Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(7)));
+  let vec10 : Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(10)));
+  let stmt : Stmt = Stmt::LeftStmt(vec10, None); 
+  let vector: Vector = Vector::Stmt(Some(Box::new(vector0)), Box::new(stmt));
+  let expected: Result<(&str, StmtLst),nom::Err<nom::error::Error<&str>>> = Ok(("",StmtLst::Statement(None, Stmt::LeftStmt(vector, None))));
+  let mut expected_vec = Vec::new();
+  expected_vec.push(expected);
+  let actual_vec = parse_lines2(input);
+  // println!("Actual: {:?}", actual_vec);
+  // println!("Expected: {:?}", expected_vec);
+  for (actual, expected) in actual_vec.iter().zip(expected_vec.iter()) {
+    assert_eq!(actual, expected);
+}
 }
 
 
