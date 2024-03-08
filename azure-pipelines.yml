@@ -1,15 +1,18 @@
-# Starter pipeline
-- task: CargoAuthenticate@0
-  inputs:
-    configFile: '/Cargo.toml'
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - main
 
-pool:
+pool: 
   vmImage: ubuntu-latest
 
+stages:
+- stage: CI
+  jobs:
+  - job: CIWork
+    steps:
+    - script: "Do CI work"
 
+- stage: Test
+  jobs:
+  - job: TestWork
+    steps:
+    - script: "Do test work"
