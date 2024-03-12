@@ -1,4 +1,4 @@
-# APL-convertor (work in progress)
+# apl_converter (work in progress)
 Implementing a parser and generator for APL, to Python Tensorflow, and C++ Cuda
 
 To write apl symbols (Linux):

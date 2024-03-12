@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn StdError>> {
     let args = ProgArgs::from_args();
     let code = args.input;
     let file = args.file;
-    let language = args.language;
+    let _language = args.language;
     // TODO return Err instead of Ok if error happens with appropiate new error type
     match (code, file) {
         (Some(_), Some(_)) => eprintln!("Cannot give both code and file as input"),

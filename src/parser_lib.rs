@@ -11,8 +11,8 @@ use nom::{
     combinator::{map, map_res, opt, peek, recognize},
     error::{convert_error, Error, VerboseError},
     multi::{many0, many1},
-    sequence::{self, pair, preceded, separated_pair, terminated, tuple},
-    Err, IResult,
+    sequence::{pair, preceded, separated_pair, terminated, tuple},
+    IResult,
 };
 
 use crate::ast;
@@ -188,8 +188,9 @@ fn parse_scalar(input: &str) -> IResult<&str, ast::Scalar> {
     }
 }
 
-/// end SCALAR PARSERS
+// end SCALAR PARSERS
 
+// TODO parse space1 after each scalar.
 fn parse_vector(input: &str) -> IResult<&str, ast::Vector> {
     // println!("Parsing vector") ;
     let (input, _) = space0(input)?;
