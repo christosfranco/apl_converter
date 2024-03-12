@@ -27,5 +27,7 @@ jobs:
       - name: List files in root repository
         run: |
           ls ${{ github.workspace }}
+          find ${{ github.workspace }} -type f -name '*.rs'
+          find ${{ github.workspace }} -type f -name '*.apl'
       - run: echo "This job's status is ${{ job.status }}."
       

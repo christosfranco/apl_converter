@@ -81,32 +81,6 @@ fn main() -> Result<(), Box<dyn StdError>>  {
   Ok(())
 }
 
-
-// OLD PARSERS
-fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
-  let mut vec = Vec::new();
-  if let Ok((remainder,output)) = alt((
-    parse_comment,
-    parse_comment,
-  ) 
-  )(input) {
-    vec.push(output);
-    return Ok((remainder,vec));
-  } else {
-    return Ok(("",vec));
-  };
-}
-fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
-  let mut vec_lines = Vec::new();
-  let mut vec_line = Vec::new();
-  let stmt = Stmt::LeftStmt(Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(2))),None);
-  vec_line.push(stmt);
-  vec_lines.push(vec_line);
-  Ok(("", vec_lines))
-}
-// END OLD PARSERS
-
-
 fn reverse(s: &str) -> String {
   s.chars().rev().collect()
 }
