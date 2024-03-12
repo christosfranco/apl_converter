@@ -743,7 +743,6 @@ fn test_parse_id() {
 fn test_parse_id_error() {
   let string = "2str1";
   let input = &reverse_line(string);
-  // let output : APL_convertor::ast::Identifier= Identifier("str1".to_string());
   let expected : Result<(&str, APL_convertor::ast::Scalar), nom::Err<nom::error::Error<&str>>>= Err(nom::Err::Failure(Error { input: "1rts2", code: nom::error::ErrorKind::Alpha }));
   let actual = parse_id(input);
   // println!("Actual: {:?}", actual);
