@@ -1,12 +1,12 @@
 use crate::ast::*;
 
-
-
 // Implement PartialEq for StmtLst enum
 impl PartialEq for StmtLst {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (StmtLst::Statement(stmtlst1, stmt1), StmtLst::Statement(stmtlst2,stmt2)) => stmt1 == stmt2 && stmtlst1 == stmtlst2,
+            (StmtLst::Statement(stmtlst1, stmt1), StmtLst::Statement(stmtlst2, stmt2)) => {
+                stmt1 == stmt2 && stmtlst1 == stmtlst2
+            }
             // (StmtLst::Lst(stmt1, box_stmtlst1), StmtLst::Lst(stmt2, box_stmtlst2)) => {
             //     stmt1 == stmt2 && *box_stmtlst1 == *box_stmtlst2
             // }
@@ -21,8 +21,7 @@ impl PartialEq for Stmt {
         match (self, other) {
             (Stmt::LeftStmt(vector1, left_stmts1), Stmt::LeftStmt(vector2, left_stmts2)) => {
                 vector1 == vector2 && left_stmts1 == left_stmts2
-            }
-            // _ => false,
+            } // _ => false,
         }
     }
 }
@@ -41,12 +40,13 @@ impl PartialEq for LeftStmt {
     }
 }
 
-
 // Implement PartialEq for Function enum
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Function::Mop(mop1, box_func1), Function::Mop(mop2, box_func2)) => mop1 == mop2 && *box_func1 == *box_func2,
+            (Function::Mop(mop1, box_func1), Function::Mop(mop2, box_func2)) => {
+                mop1 == mop2 && *box_func1 == *box_func2
+            }
             (Function::Dop(dop1, box_func1, f1), Function::Dop(dop2, box_func2, f2)) => {
                 dop1 == dop2 && *box_func1 == *box_func2 && f1 == f2
             }
@@ -95,8 +95,12 @@ impl PartialEq for F {
 impl PartialEq for Vector {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Vector::Scalar(vec1,scalar1), Vector::Scalar(vec2,scalar2)) => scalar1 == scalar2 && vec1 == vec2,
-            (Vector::Stmt(vec1,box_stmt1), Vector::Stmt(vec2,box_stmt2)) => box_stmt1 == box_stmt2 && vec1 == vec2,
+            (Vector::Scalar(vec1, scalar1), Vector::Scalar(vec2, scalar2)) => {
+                scalar1 == scalar2 && vec1 == vec2
+            }
+            (Vector::Stmt(vec1, box_stmt1), Vector::Stmt(vec2, box_stmt2)) => {
+                box_stmt1 == box_stmt2 && vec1 == vec2
+            }
             _ => false,
         }
     }
@@ -106,7 +110,9 @@ impl PartialEq for Vector {
 impl PartialEq for Scalar {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Scalar::IntFloat(int_float1), Scalar::IntFloat(int_float2)) => int_float1 == int_float2,
+            (Scalar::IntFloat(int_float1), Scalar::IntFloat(int_float2)) => {
+                int_float1 == int_float2
+            }
             (Scalar::Complex(complex1), Scalar::Complex(complex2)) => complex1 == complex2,
             (Scalar::Identifier(id1), Scalar::Identifier(id2)) => id1 == id2,
             _ => false,
@@ -118,9 +124,10 @@ impl PartialEq for Scalar {
 impl PartialEq for Complex {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Complex::Complex(int_float1a, int_float1b), Complex::Complex(int_float2a, int_float2b)) => {
-                int_float1a == int_float2a && int_float1b == int_float2b
-            }
+            (
+                Complex::Complex(int_float1a, int_float1b),
+                Complex::Complex(int_float2a, int_float2b),
+            ) => int_float1a == int_float2a && int_float1b == int_float2b,
         }
     }
 }

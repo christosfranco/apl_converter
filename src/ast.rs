@@ -2,7 +2,6 @@
 
 use std::fmt;
 
-
 // program        ::= EOF statement_list
 // statement_list ::= (statement "⋄")* statement
 // statement      ::= ( ID "←" | vector function | function )* vector
@@ -16,7 +15,6 @@ use std::fmt;
 // vector         ::= vector* ( scalar | ( LPARENS statement RPARENS ) )
 // scalar         ::= INTEGER | FLOAT | COMPLEX | ID
 
-
 // # chunk      ::= EOF statements
 // # statements ::= (statement DIAMOND)* statement
 // # statement  ::= ( ID GETS | vector function | function )* vector?
@@ -28,7 +26,6 @@ use std::fmt;
 
 // DYADIC_OPS = set('⍥@⍣⍤∘.⌺⍠') # FIXME: this should use Voc!!
 // MONADIC_OPS = set('\\/⌿⍀¨⍨')
-
 
 /// recursive parsing structure instead of 0 or many
 // program        ::= EOF statement_list
@@ -45,21 +42,18 @@ use std::fmt;
 // vector         ::= (vector | None) ( scalar | ( LPARENS statement RPARENS ) )
 // scalar         ::= INTEGER | FLOAT | COMPLEX | ID
 
-
 // vector         ::= vector vector scalar
 // vector         ::= vector scalar scalar
-
-
 
 // use many0 like in parse_statement
 // parse stmt
 // parse "⋄" if true
-    // then parse stmtlst
+// then parse stmtlst
 
 // statement_list ::= (statement "⋄") (statement "⋄") statement
 #[derive(Debug)]
 pub enum StmtLst {
-    Statement(Option<Vec<Stmt>>,Stmt),
+    Statement(Option<Vec<Stmt>>, Stmt),
 }
 
 #[derive(Debug)]
@@ -72,7 +66,7 @@ pub enum LeftStmt {
     // TODO refactor to match type Identifier instead of Scalar
     Assignment(Scalar),
     Function(Function),
-    VectorFunction(Vector,Function)
+    VectorFunction(Vector, Function),
 }
 
 #[derive(Debug)]
@@ -84,14 +78,14 @@ pub enum Function {
 
 #[derive(Debug)]
 pub enum Dop {
-    Composition, // "∘"
+    Composition,     // "∘"
     CompositionWith, // "⍥"
 }
 
 #[derive(Debug)]
 pub enum Mop {
     Reverse, // "⍨"
-    Each, // "¨"
+    Each,    // "¨"
 }
 
 #[derive(Debug)]
@@ -123,34 +117,28 @@ pub enum F {
 pub enum Vector {
     // Multiple(Vec<Vector>),
     Scalar(Option<Box<Vector>>, Scalar),
-    Stmt(Option<Box<Vector>>,Box<Stmt>),
+    Stmt(Option<Box<Vector>>, Box<Stmt>),
 }
 
 #[derive(Debug)]
 pub enum Scalar {
-    Complex(Complex ),
+    Complex(Complex),
     IntFloat(IntFloat),
     Identifier(Identifier),
 }
 #[derive(Debug)]
 pub enum Complex {
-    Complex(IntFloat,IntFloat),
+    Complex(IntFloat, IntFloat),
 }
 
 #[derive(Debug)]
 pub enum IntFloat {
     Integer(i64),
-    Float((i64,f64)),
+    Float((i64, f64)),
 }
 
 #[derive(Debug)]
-pub struct Identifier(
-    pub String
-);
-
-
-
-
+pub struct Identifier(pub String);
 
 // OLD AST, KEEP until Display function is refactored
 
@@ -198,7 +186,7 @@ impl fmt::Display for SFun {
     }
 }
 // ← +-×÷*⍟ ⍝
-// language syntax 
+// language syntax
 // <prefix> <symbol(s)>
 // Assign, <prefix> [
 // Conjugate, +
@@ -214,10 +202,8 @@ impl fmt::Display for SFun {
 // Natural Logarithm, <prefix> *
 // Logarithm, <prefix> *
 // Comment, <prefix> ,
-// 
-// 
-// 
-// 
 //
-
-
+//
+//
+//
+//
