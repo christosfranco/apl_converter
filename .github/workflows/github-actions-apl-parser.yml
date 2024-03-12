@@ -27,7 +27,7 @@ jobs:
       - name: List files in root repository
         run: |
           ls ${{ github.workspace }}
-      -name: List .apl and .rs files
+      - name: List .apl and .rs files
         run: |
           find ${{ github.workspace }} -type f -name '*.rs'
           find ${{ github.workspace }} -type f -name '*.apl'
