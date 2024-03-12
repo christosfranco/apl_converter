@@ -1,70 +1,88 @@
 extern crate nom;
-use std::collections::HashMap;
 use nom::{
-  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, char, digit1, multispace0, newline, space0, space1}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, multi::{many0, many1}, sequence::{self, pair, preceded, separated_pair, terminated, tuple}, Err, IResult
+  branch::alt, bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n}, character::{complete::{alpha1, alphanumeric0, anychar, char, digit1, multispace0, newline, space0, space1}, is_space}, combinator::{map, map_res, opt, peek, recognize}, error::{convert_error, Error, VerboseError}, multi::{many0, many1}, sequence::{self, pair, preceded, separated_pair, terminated, tuple}, Err, IResult
 };
 use APL_convertor::ast::*;
-
-
+use structopt::StructOpt;
+use std::path::PathBuf;
 use std::error::Error as StdError;
-fn main() -> Result<(), Box<dyn StdError>>  {
-  // println!("{}", SFun::Assign);
-  // println!("{}", SFun::Conjugate);
-  // println!("{}", SFun::Plus);
-  // println!("{}", SFun::Negate);
-  // println!("{}", SFun::Minus);
-  // println!("{}", SFun::Direction);
-  // println!("{}", SFun::Times);
-  // println!("{}", SFun::Reciprocal);
-  // println!("{}", SFun::Divide);
-  // println!("{}", SFun::Exponential);
-  // println!("{}", SFun::Power);
-  // println!("{}", SFun::NaturalLogarithm);
-  // println!("{}", SFun::Logarithm);
-  // println!("{}", SFun::Comment);
-  let code = "⍝testapl
-  str ← 'Hello world'
-  str";
+use std::fs;
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "APL Converter",
+    about = "APL Converter is a Parser-Generator tool to convert APL code."
+)]
 
-  // let code = "⍝testapl\n";
-  match parse_apl(code) {
-    Ok((remainder,output)) => {
-      println!("Remainder: {}",remainder);
-      println!("Output: {:?}",output);
-      
-    },
-    Err(error) => {
-      println!("{}",error);
-    }
-  }
+pub struct ProgArgs {
+  /// Code file. Example: examples/hello_world.apl. If not set will expect `input_code`
+  #[structopt(short,long)]
+  file: Option<PathBuf>,
   
-  let vec_lines = split_str_reverse_lines(code) ;
+  /// Input code string. Use this if `file` is not set.
+  #[structopt(short,long)]
+  input: Option<String>,
 
-  let mut ref_vec_lines: Vec<&str> = Vec::new(); 
-  for line in vec_lines.iter() {
-    ref_vec_lines.push(line.as_str());
-  }
+  /// Which language to convert to. 
+  #[structopt(short,long, default_value = "python3")]
+  language: String,
+}
 
-  match parse_lines(ref_vec_lines) {
-    Ok((remainder,output)) => {
-      println!("Remainder: {}",remainder);
-      println!("Output: {:?}", output);
+fn read_file_contents(path: String) -> Result<String, Box<dyn StdError>> {
+  // Read the file contents into a String
+  let contents = fs::read_to_string(path)?;
+
+  Ok(contents)
+}
+
+fn main() -> Result<(), Box<dyn StdError>>  {
+  let args = ProgArgs::from_args();
+  let code = args.input;
+  let file = args.file;
+  let language = args.language;
+  // TODO return Err instead of Ok if error happens with appropiate new error type
+  match (code, file) {
+    (Some(_), Some(_))  => eprintln!("Cannot give both code and file as input"),
+    (None, None) =>  eprintln!("Either code or file expected as input"),
+    (None,Some(file)) =>  {
+      if let Some(file) = file.to_str() {  
+        match read_file_contents(file.to_string()) {
+          // VALID FILE INPUT
+          Ok(contents) => {
+            let rev_string = split_str_reverse_lines(&contents) ;
+            let mut input: Vec<&str> = Vec::new(); 
+            for line in rev_string.iter() {
+              input.push(line.as_str());
+            }
+            let res = parse_lines2(input);
+            // TODO return result here , instead of printing
+            println!("Result: {:?}",res);
+          }
+          Err(e) => {
+              eprintln!("Error reading file: {}", e);
+          }
+        };
+      } else {
+        eprintln!("Code input was not valid format");
+        // return Err((""))
+      }
     },
-    Err(error) => {
-      println!("{}",error);
+    (Some(code),None) => {
+      // VALID STRING INPUT
+      let rev_string = split_str_reverse_lines(&code) ;
+      let mut input: Vec<&str> = Vec::new(); 
+      for line in rev_string.iter() {
+        input.push(line.as_str());
+      }
+      let res = parse_lines2(input);
+      // TODO return result here , instead of printing
+      println!("Result: {:?}",res);
     }
   }
-  return Ok(());
+  Ok(())
 }
 
 
 // OLD PARSERS
-fn parse_comment_content(input:&str) -> IResult<&str, &str> {
-  preceded(tag("⍝"),take_until( "\n"))(input)
-}
-fn parse_comment(input: &str) -> IResult<&str,&str>   {
-  parse_comment_content(input)
-}
 fn parse_apl(input: &str) -> IResult<&str, Vec<&str>>  {
   let mut vec = Vec::new();
   if let Ok((remainder,output)) = alt((
@@ -88,6 +106,41 @@ fn parse_lines(input: Vec<&str>) -> IResult<&str, Vec<Vec<Stmt>>> {
 }
 // END OLD PARSERS
 
+
+fn reverse(s: &str) -> String {
+  s.chars().rev().collect()
+}
+
+fn split_str_reverse_lines(s: &str) -> Vec<String> {
+  // Split the string into lines
+  let vec_lines: Vec<String> = s.lines().map(|line| reverse(line).to_string()).collect();
+  // let mut vec_lines = Vec::new();
+  // vec_lines.push("something");
+  // Print the reversed lines
+  return vec_lines;
+}
+
+
+fn split_str_reverse_lines_string(s: String) -> Vec<String> {
+  // Split the string into lines
+  let vec_lines: Vec<String> = s.lines().map(|line| reverse(line)).collect();
+  // let mut vec_lines = Vec::new();
+  // vec_lines.push("something");
+  // Print the reversed lines
+  return vec_lines;
+}
+
+fn reverse_line(input: &str) -> String {
+  reverse(input)
+}
+
+
+fn parse_comment_content(input:&str) -> IResult<&str, &str> {
+  preceded(tag("⍝"),take_until( "\n"))(input)
+}
+fn parse_comment(input: &str) -> IResult<&str,&str>   {
+  parse_comment_content(input)
+}
 
 //// SCALAR PARSERS
 fn parse_str_to_int(input: &str) -> IResult<&str, i64> {
@@ -195,15 +248,28 @@ fn parse_id(input : &str) -> IResult<&str,APL_convertor::ast::Scalar > {
 }
 
 fn parse_scalar(input:&str) -> IResult<&str,APL_convertor::ast::Scalar> {
-  let res = alt((parse_complex,parse_id))(input);
-  match res {
-    Ok((remainder,output)) => Ok((remainder, (output))),
+  // let (_,res_string,_) = tuple( (char('\''), many1(anychar) ,char('\'') )); 
+  let alt_parser = alt((
+    space0,
+    alphanumeric0,
+  ) 
+  );
+  match tuple( (char::<&str, Error<&str>>('\''), many1(alt_parser) ,char('\'') ))(input) {
+    Ok((remainder,(_c1,output_statement,_c2))) => {
+      return Ok((remainder,Scalar::Identifier(Identifier(output_statement.iter().cloned().collect::<String>()))))
+    },
     Err(_error) => {
-      let res = parse_intfloat(input);
-      match res {
-          Ok((remainder,output)) => Ok((remainder,Scalar::IntFloat(output))),
-          Err(error) => Err(error),
-      }
+        let res = alt((parse_complex,parse_id))(input);
+        match res {
+          Ok((remainder,output)) => Ok((remainder, (output))),
+          Err(_error) => {
+            let res = parse_intfloat(input);
+            match res {
+                Ok((remainder,output)) => Ok((remainder,Scalar::IntFloat(output))),
+                Err(error) => Err(error),
+            }
+          }
+        }
     }
   }
 }
@@ -244,6 +310,8 @@ fn parse_assignment(input: &str) -> IResult<&str, LeftStmt> {
   Ok((input, LeftStmt::Assignment(id1)))
 }
 
+
+
 fn parse_statement(input: &str) -> IResult<&str, Stmt> {
   // Define parsers with optional whitespace
   let parse_vector_with_space = preceded(space0, parse_vector);
@@ -264,24 +332,6 @@ fn parse_statement(input: &str) -> IResult<&str, Stmt> {
     },
     Err(error) => Err(error)
   }
-}
-
-
-fn reverse(s: &str) -> String {
-  s.chars().rev().collect()
-}
-
-fn split_str_reverse_lines(s: &str) -> Vec<String> {
-  // Split the string into lines
-    let vec_lines: Vec<String> = s.lines().map(|line| reverse(line).to_string()).collect();
-    // let mut vec_lines = Vec::new();
-    // vec_lines.push("something");
-     // Print the reversed lines
-    return vec_lines;
-}
-
-fn reverse_line(input: &str) -> String {
-  reverse(input)
 }
 
 
@@ -309,8 +359,6 @@ fn parse_lines2(input: Vec<&str>) -> Vec<IResult<&str,StmtLst>> {
   }
   vec_lines
 }
-
-
 
 
 #[test]
@@ -399,9 +447,6 @@ fn test_parse_matrix() {
     assert_eq!(actual, expected);
 }
 }
-
-
-
 
 #[test]
 fn test_parse_lines_multiples() {
