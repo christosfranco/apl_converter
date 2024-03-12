@@ -152,7 +152,7 @@ fn parse_str_to_float(input: &str) -> IResult<&str, f64> {
   }
 }
 
-/// Format Imaginary ["j","J"] Real
+/// Format Imaginary i ["j","J"] Real r , ijr
 fn parse_complex(input: &str) ->  IResult<&str,apl_converter::ast::Scalar> {
   match separated_pair(parse_intfloat, tag_no_case("j"), parse_intfloat)(input) {
     Ok((remainder, (first, second))) => {
