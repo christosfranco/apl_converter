@@ -1,5 +1,5 @@
 name: IO testing with python3 and apl-gnu
-run-name: ${{ github.actor }} testing the parser workflow
+run-name: ${{ github.actor }} IO testing with python3 and apl-gnu
 on: 
   push:
     branches: [ $default-branch,main ]
