@@ -48,18 +48,18 @@ jobs:
       
       - name: Configure
         run: |
-          cd apl_1.8
+          cd apl-1.8
           ./configure
 
       - name: Make
         run: |
-          cd apl_1.8
+          cd apl-1.8
           make
 
       - name: Make Install
         run: |
-          cd apl_1.8
+          cd apl-1.8
           sudo make install
-          
+
       - name: Run IOtester
         run: sh ./IOtester/IOtester.sh ./IOtester/apl_input/ ./IOtester/py_input/ ./IOtester/expected/ ./IOtester/out_folder/
