@@ -17,3 +17,6 @@ Cargo.lock
 APL_examples/.apl.history
 
 *.apl.history
+
+# ignore vscode settings file
+.vscode/settings.json
