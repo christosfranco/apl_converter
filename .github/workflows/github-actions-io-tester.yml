@@ -31,5 +31,5 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip test
+            python3 -m pip install --upgrade pip
+            pip install -r requirements.txt
