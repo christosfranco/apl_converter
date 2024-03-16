@@ -21,6 +21,10 @@ jobs:
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
+      - name: Build Production
+        run: cargo build -r --verbose
+      - name: Run tests Production
+        run: cargo test -r --verbose
       - name: Check out repository code
         uses: actions/checkout@v4
       - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
@@ -33,5 +37,8 @@ jobs:
       - name: List all .apl files
         run: |
           find ${{ github.workspace }} -type f -name '*.apl'
+      - name: Run IOTester for comparing apl and python3 output
+        run: |
+          sh ./IOtester/IOtester.sh apl_input/ py_input/ expected/ out_folder/    
       - run: echo "This job's status is ${{ job.status }}."
       

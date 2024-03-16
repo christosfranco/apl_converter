@@ -1,24 +1,19 @@
 extern crate nom;
-
-mod parser {
-  pub mod parser_lib;
-}
-// use parser
-use parser::parser_lib ;
-
 use apl_converter::ast::*;
-
-
 use nom::IResult;
 use std::error::Error as StdError;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+
+// use parser lib
+pub mod parser_lib;
+
 #[derive(Debug, StructOpt)]
 #[structopt(
-    name = "APL Converter",
-    about = "APL Converter is a Parser-Generator tool to convert APL code."
+    name = "APL Parser",
+    about = "APL Parser is a Parser tool to convert APL code to an Abstract syntax tree."
 )]
 
 pub struct ProgArgs {
@@ -29,10 +24,6 @@ pub struct ProgArgs {
     /// Input code string. Use this if `file` is not set.
     #[structopt(short, long)]
     input: Option<String>,
-
-    /// Which language to convert to.
-    #[structopt(short, long, default_value = "python3")]
-    language: String,
 }
 
 fn read_file_contents(path: String) -> Result<String, Box<dyn StdError>> {
@@ -56,7 +47,6 @@ fn main() -> Result<(), Box<dyn StdError>> {
     let args = ProgArgs::from_args();
     let code = args.input;
     let file = args.file;
-    let _language = args.language;
     // TODO return Err instead of Ok if error happens with appropiate new error type
     match (code, file) {
         (Some(_), Some(_)) => eprintln!("Cannot give both code and file as input"),

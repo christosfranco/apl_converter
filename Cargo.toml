@@ -5,6 +5,17 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+
+# combined parser generator
+[[bin]]
+name = "apl_converter"
+path = "src/main.rs"  # Path to the source file of binary1
+
+# only the parser
+[[bin]]
+name = "apl_parser"
+path = "src/parser/main.rs"  # Path to the source file of binary2
+
 [dependencies]
 nom = "7.1.3"
 clap = { version = "3.2.23", features = ["derive"] }

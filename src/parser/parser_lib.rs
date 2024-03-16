@@ -1,4 +1,6 @@
+
 extern crate nom;
+use apl_converter::ast::Scalar;
 use nom::{
     branch::alt,
     bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n},
@@ -15,8 +17,9 @@ use nom::{
     IResult,
 };
 
-use crate::ast;
-use crate::ast::*;
+use apl_converter::ast;
+
+use apl_converter::ast::*;
 
 pub fn split_str_reverse_lines(s: &str) -> Vec<String> {
     // Split the string into lines
