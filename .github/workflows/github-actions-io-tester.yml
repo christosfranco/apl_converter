@@ -11,7 +11,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-debian
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.8"]
@@ -55,7 +55,7 @@ jobs:
       - name: Make
         run: |
           cd apl-1.8
-          make
+          sudo make
 
       - name: Make Install
         run: |
