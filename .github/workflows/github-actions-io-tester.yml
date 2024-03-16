@@ -61,6 +61,8 @@ jobs:
     #     run: |
     #       cd apl-1.8
     #       sudo make install
+      - name: Install libtinfo5
+        run: sudo apt-get update && sudo apt-get install -y libtinfo5
 
       - name: Download APL .deb package
         run: |
