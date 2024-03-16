@@ -39,28 +39,35 @@ jobs:
             python3 -m pip install --upgrade pip
             pip install -r requirements.txt
      
-      - name: Download Tarball
-        run: |
-          wget https://ftp.gnu.org/gnu/apl/apl-1.8.tar.gz
+    #   - name: Download Tarball
+    #     run: |
+    #       wget https://ftp.gnu.org/gnu/apl/apl-1.8.tar.gz
           
-      - name: Extract Tarball
-        run: |
-          tar -xzvf apl-1.8.tar.gz
+    #   - name: Extract Tarball
+    #     run: |
+    #       tar -xzvf apl-1.8.tar.gz
       
-      - name: Configure
-        run: |
-          cd apl-1.8
-          ./configure
+    #   - name: Configure
+    #     run: |
+    #       cd apl-1.8
+    #       ./configure
 
-      - name: Make
-        run: |
-          cd apl-1.8
-          sudo make
+    #   - name: Make
+    #     run: |
+    #       cd apl-1.8
+    #       sudo make
 
-      - name: Make Install
+    #   - name: Make Install
+    #     run: |
+    #       cd apl-1.8
+    #       sudo make install
+
+      - name: Download APL .deb package
         run: |
-          cd apl-1.8
-          sudo make install
+          wget https://ftp.gnu.org/gnu/apl/apl_1.8-1_amd64.deb
+
+      - name: Install APL
+        run: sudo dpkg -i apl_1.8-1_amd64.deb
 
       - name: Run IOtester
         run: sh ./IOtester/IOtester.sh ./IOtester/apl_input/ ./IOtester/py_input/ ./IOtester/expected/ ./IOtester/out_folder/
