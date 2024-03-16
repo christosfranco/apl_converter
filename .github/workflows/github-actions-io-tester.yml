@@ -6,10 +6,8 @@ on:
   pull_request:
     branches: [ $default-branch,main ]
 
-# rust env
-env:
-    CARGO_TERM_COLOR: always
-
+    
+    
 jobs:
   build:
 
@@ -17,6 +15,12 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8","3.12"]
+
+# rust env
+    env:
+        CARGO_TERM_COLOR: always
+        # CACHE_KEY: ${{ runner.os }}-build-${{ hashFiles('**/apl_1.8-1.debian.tar.gz') }}
+
 
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +40,26 @@ jobs:
      
       - name: Download Tarball
         run: |
-          wget https://ftp.gnu.org/gnu/apl/apl_1.8-1.debian.tar.gz
+          wget https://ftp.gnu.org/gnu/apl/apl-1.8.tar.gz
           
       - name: Extract Tarball
         run: |
-          tar -xzvf apl_1.8-1.debian.tar.gz
+          tar -xzvf apl-1.8.tar.gz
+      
+      - name: Configure
+        run: |
+          cd apl_1.8
+          ./configure
+
+      - name: Make
+        run: |
+          cd apl_1.8
+          make
+
+      - name: Make Install
+        run: |
+          cd apl_1.8
+          sudo make install
+          
+      - name: Run IOtester
+        run: sh ./IOtester/IOtester.sh ./IOtester/apl_input/ ./IOtester/py_input/ ./IOtester/expected/ ./IOtester/out_folder/
