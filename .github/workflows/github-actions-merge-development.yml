@@ -1,0 +1,31 @@
+name: Merge to Development
+
+on:
+  workflow_run:
+    workflows: ["IO testing with python3 and apl-gnu", "GitHub Actions Rust Apl Parser"]
+    types:
+      - completed
+
+jobs:
+  merge_to_development:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check workflow statuses
+        id: check_status
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # check the two workflows are success
+          script: |
+            const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
+            const workflowBStatus = context.payload.workflow_run.workflow.name === "GitHub Actions Rust Apl Parser" ? context.payload.workflow_run.conclusion : null;
+
+            return { workflowAStatus, workflowBStatus };
+
+      - name: Merge to Development
+        if: steps.check_status.outputs.workflowAStatus == 'success' && steps.check_status.outputs.workflowBStatus == 'success'
+        run: |
+          git checkout development
+          git merge --no-ff ${{ github.event.workflow_run.head_commit.sha }}
+          git push origin development
