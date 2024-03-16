@@ -15,3 +15,5 @@ Cargo.lock
 
 # apl history
 APL_examples/.apl.history
+
+*.apl.history

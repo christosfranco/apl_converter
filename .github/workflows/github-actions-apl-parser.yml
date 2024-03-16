@@ -39,6 +39,6 @@ jobs:
           find ${{ github.workspace }} -type f -name '*.apl'
       - name: Run IOTester for comparing apl and python3 output
         run: |
-          sh ./IOtester/IOtester.sh apl_input/ py_input/ expected/ out_folder/    
+          sh ./IOtester/IOtester.sh ./IOtester/apl_input/ ./IOtester/py_input/ ./IOtester/expected/ ./IOtester/out_folder/ 
       - run: echo "This job's status is ${{ job.status }}."
       
