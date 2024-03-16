@@ -33,3 +33,11 @@ jobs:
         run: |
             python3 -m pip install --upgrade pip
             pip install -r requirements.txt
+     
+      - name: Download Tarball
+        run: |
+          wget https://ftp.gnu.org/gnu/apl/apl_1.8-1.debian.tar.gz
+          
+      - name: Extract Tarball
+        run: |
+          tar -xzvf apl_1.8-1.debian.tar.gz
