@@ -4,18 +4,18 @@ on:
   workflow_run:
     workflows: [IO Tests,Rust Tests]
     types: [completed]
-    branches: [feature]
+    # branches: [feature]
 
 jobs:
   merge_to_development:
     runs-on: ubuntu-latest
     # runs-on: ubuntu-20.04
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'feature' }}
     steps:
       - run: echo 'The triggering workflow passed'
   on-failure:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch == 'feature'  }}
     steps:
       - run: echo 'The triggering workflow failed'
   do-something:
