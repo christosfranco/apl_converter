@@ -20,6 +20,10 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:
       - run: echo 'The triggering workflow failed'
+  do-something:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'something'
       # with:
         #   github-token: ${{ secrets.GITHUB_TOKEN }}
           # check the two workflows are success
