@@ -5,6 +5,7 @@ on:
     workflows: [IO Tests,Rust Tests]
     types: [completed]
     # branches: [feature]
+    branches-ignore: [main]
 #
 jobs:
   merge_to_development:
