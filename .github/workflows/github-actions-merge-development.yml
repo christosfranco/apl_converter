@@ -17,7 +17,7 @@ jobs:
         id: check_status
         uses: actions/github-script@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        #   github-token: ${{ secrets.GITHUB_TOKEN }}
           # check the two workflows are success
           script: |
             const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
