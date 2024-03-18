@@ -1,8 +1,6 @@
 name: Merge to Development
 run-name: ${{ github.actor }} Trying to merge into development
 on:
-  push:
-    branches: [ feature ]
   workflow_run:
     workflows: [IO Tests,Rust Tests]
     types: [completed]
