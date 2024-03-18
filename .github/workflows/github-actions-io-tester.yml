@@ -1,4 +1,4 @@
-name: IO testing with python3 and apl-gnu
+name: IO Tests
 run-name: ${{ github.actor }} IO testing with python3 and apl-gnu
 on: 
   push:

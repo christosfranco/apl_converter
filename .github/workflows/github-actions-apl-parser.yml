@@ -1,4 +1,4 @@
-name: GitHub Actions Rust Apl Parser
+name: Rust Tests
 run-name: ${{ github.actor }} testing the parser workflow
 on: 
   push:
