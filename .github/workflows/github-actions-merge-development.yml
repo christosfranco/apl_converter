@@ -1,12 +1,8 @@
 name: Merge to Development
 run-name: ${{ github.actor }} Trying to merge into development
 on:
-  workflow_dispatch:  # This triggers the workflow when manually dispatched
-
   push:
     branches: [ feature ]
-#   pull_request:
-#     branches: [ main,development ]
   workflow_run:
     workflows: ["IO testing with python3 and apl-gnu", "GitHub Actions Rust Apl Parser"]
     types:
@@ -17,22 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     # runs-on: ubuntu-20.04
     steps:
-    #   - name: Check workflow statuses
-    #     id: check_status
-    #     uses: actions/github-script@v4
-    #     with:
-    #       github-token: ${{ secrets.GITHUB_TOKEN }}
-    #       # check the two workflows are success
-    #       script: |
-    #         const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
-    #         const workflowBStatus = context.payload.workflow_run.workflow.name === "GitHub Actions Rust Apl Parser" ? context.payload.workflow_run.conclusion : null;
+      - name: Check workflow statuses
+        id: check_status
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # check the two workflows are success
+          script: |
+            const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
+            const workflowBStatus = context.payload.workflow_run.workflow.name === "GitHub Actions Rust Apl Parser" ? context.payload.workflow_run.conclusion : null;
 
-    #         return { workflowAStatus, workflowBStatus };
+            return { workflowAStatus, workflowBStatus };
 
-    #     if: steps.check_status.outputs.workflowAStatus == 'success' && steps.check_status.outputs.workflowBStatus == 'success'
       - name: Merge to Development
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature' && steps.check_status.outputs.workflowAStatus == 'success' && steps.check_status.outputs.workflowBStatus == 'success'
         run: |
-          git checkout development
-          git push origin development
+            git checkout development
+            git push origin development
           
         #   git merge --no-ff ${{ github.event.workflow_run.head_commit.sha }}
