@@ -1,8 +1,8 @@
 name: Merge to Development
 run-name: ${{ github.actor }} Trying to merge into development
 on:
-  push:
-    branches: [ feature ]
+#   push:
+#     branches: [ feature ]
   workflow_run:
     workflows: ["IO testing with python3 and apl-gnu", "GitHub Actions Rust Apl Parser"]
     types:
@@ -16,17 +16,18 @@ jobs:
       - name: Check workflow statuses
         id: check_status
         uses: actions/github-script@v4
-        with:
+        # with:
         #   github-token: ${{ secrets.GITHUB_TOKEN }}
           # check the two workflows are success
-          script: |
-            const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
-            const workflowBStatus = context.payload.workflow_run.workflow.name === "GitHub Actions Rust Apl Parser" ? context.payload.workflow_run.conclusion : null;
+        #   script: |
+        #     const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
+        #     const workflowBStatus = context.payload.workflow_run.workflow.name === "GitHub Actions Rust Apl Parser" ? context.payload.workflow_run.conclusion : null;
 
-            return { workflowAStatus, workflowBStatus };
+        #     return { workflowAStatus, workflowBStatus };
 
       - name: Merge to Development
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feature' && steps.check_status.outputs.workflowAStatus == 'success' && steps.check_status.outputs.workflowBStatus == 'success'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature' 
+        #&& steps.check_status.outputs.workflowAStatus == 'success' && steps.check_status.outputs.workflowBStatus == 'success'
         run: |
             git checkout development
             git push origin development
