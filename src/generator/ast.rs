@@ -40,15 +40,6 @@
 // vector         ::= (vector | None) ( scalar | ( LPARENS statement RPARENS ) )
 // scalar         ::= INTEGER | FLOAT | COMPLEX | ID
 
-// vector         ::= vector vector scalar
-// vector         ::= vector scalar scalar
-
-// use many0 like in parse_statement
-// parse stmt
-// parse "⋄" if true
-// then parse stmtlst
-
-// statement_list ::= (statement "⋄") (statement "⋄") statement
 #[derive(Debug)]
 pub enum StmtLst {
     Statement(Option<Vec<Stmt>>, Stmt),
