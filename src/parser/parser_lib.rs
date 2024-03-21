@@ -1,25 +1,24 @@
 
 extern crate nom;
-use apl_converter::ast::Scalar;
+use apl_converter::generator::ast::Scalar;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, tag_no_case, take_till, take_until, take_while, take_while_m_n},
-    character::{
+    bytes::complete::{tag, tag_no_case, take_until},
+    character::
         complete::{
-            alpha1, alphanumeric0, anychar, char, digit1, multispace0, newline, space0, space1,
-        },
-        is_space,
-    },
-    combinator::{map, map_res, opt, peek, recognize},
-    error::{convert_error, Error, VerboseError},
-    multi::{many0, many1},
+            alphanumeric0, char, digit1, space0,
+        }
+    ,
+    combinator::{opt, recognize},
+    error::Error,
+    multi::many1,
     sequence::{pair, preceded, separated_pair, terminated, tuple},
     IResult,
 };
 
-use apl_converter::ast;
+use apl_converter::generator::ast;
 
-use apl_converter::ast::*;
+use apl_converter::generator::ast::*;
 
 pub fn split_str_reverse_lines(s: &str) -> Vec<String> {
     // Split the string into lines

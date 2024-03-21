@@ -1,4 +1,4 @@
-use crate::ast::*;
+use crate::generator::ast::*;
 
 // Implement PartialEq for StmtLst enum
 impl PartialEq for StmtLst {
@@ -149,3 +149,4 @@ impl PartialEq for Identifier {
         self.0 == other.0
     }
 }
+
