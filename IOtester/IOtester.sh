@@ -73,6 +73,9 @@ do
 
     # TODO add python or c++ and redirect to output , change apl to be expected 
     apl -f "${inputdir_apl}${f_no_ext}.apl" --noCIN --OFF --safe -s -q  > "${expected_dir}${f_no_ext}.expected"
+    
+    
+
     python3 "${inputdir_py}${f_no_ext}.py" > "${output_dir}${f_no_ext}.output"
     # echo $f
     # use expected and actual when comparing apl output to py or cuda later

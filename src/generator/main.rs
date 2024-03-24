@@ -40,7 +40,6 @@ pub struct ProgArgs {
 fn read_file_contents(path: String) -> Result<String, Box<dyn StdError>> {
     // Read the file contents into a String
     let contents = fs::read_to_string(path)?;
-
     Ok(contents)
 }
 
