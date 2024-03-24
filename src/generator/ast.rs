@@ -1,7 +1,5 @@
 //! enums and structures that store the syntax tree outputed by the parser.
 
-use std::fmt;
-
 // program        ::= EOF statement_list
 // statement_list ::= (statement "⋄")* statement
 // statement      ::= ( ID "←" | vector function | function )* vector
@@ -42,15 +40,6 @@ use std::fmt;
 // vector         ::= (vector | None) ( scalar | ( LPARENS statement RPARENS ) )
 // scalar         ::= INTEGER | FLOAT | COMPLEX | ID
 
-// vector         ::= vector vector scalar
-// vector         ::= vector scalar scalar
-
-// use many0 like in parse_statement
-// parse stmt
-// parse "⋄" if true
-// then parse stmtlst
-
-// statement_list ::= (statement "⋄") (statement "⋄") statement
 #[derive(Debug)]
 pub enum StmtLst {
     Statement(Option<Vec<Stmt>>, Stmt),
@@ -161,30 +150,7 @@ pub enum SFun {
     Comment,
 }
 
-impl fmt::Display for SFun {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{}",
-            match *self {
-                SFun::Assign => "←",
-                SFun::Conjugate => "+",
-                SFun::Plus => "+",
-                SFun::Negate => "-",
-                SFun::Minus => "-",
-                SFun::Direction => "×",
-                SFun::Times => "×",
-                SFun::Reciprocal => "÷",
-                SFun::Divide => "÷",
-                SFun::Exponential => "*",
-                SFun::Power => "*",
-                SFun::NaturalLogarithm => "⍟",
-                SFun::Logarithm => "⍟",
-                SFun::Comment => "⍝",
-            }
-        )
-    }
-}
+
 // ← +-×÷*⍟ ⍝
 // language syntax
 // <prefix> <symbol(s)>
