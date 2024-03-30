@@ -1,0 +1,55 @@
+name: Merge to Development
+run-name: ${{ github.actor }} Trying to merge into development
+on:
+
+  pull_request:
+    types:
+      - closed
+    branches:
+      - development
+  workflow_run:
+    workflows: [IO Tests,Rust Tests]
+    types: [completed]
+    # branches: [feature]
+    branches-ignore: [main]
+#
+jobs:
+  merge_to_development:
+    runs-on: ubuntu-latest
+    # runs-on: ubuntu-20.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'feature' }}
+    steps:
+      - run: echo 'The triggering workflow passed'
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch == 'feature'  }}
+    steps:
+      - run: echo 'The triggering workflow failed'
+  do-something:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'something'
+  
+  if_merged:
+    if: github.event.pull_request.merged
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        echo 'The PR was merged'
+      # with:
+        #   github-token: ${{ secrets.GITHUB_TOKEN }}
+          # check the two workflows are success
+        #   script: |
+        #     const workflowAStatus = context.payload.workflow_run.workflow.name === "IO testing with python3 and apl-gnu" ? context.payload.workflow_run.conclusion : null;
+        #     const workflowBStatus = context.payload.workflow_run.workflow.name === "GitHub Actions Rust Apl Parser" ? context.payload.workflow_run.conclusion : null;
+
+        #     return { workflowAStatus, workflowBStatus };
+
+    #   - name: Merge to Development
+    #     if: github.event_name == 'push' && github.ref == 'refs/heads/feature' 
+    #     #&& steps.check_status.outputs.workflowAStatus == 'success' && steps.check_status.outputs.workflowBStatus == 'success'
+    #     run: |
+    #         git checkout development
+    #         git push origin development
+          
+        #   git merge --no-ff ${{ github.event.workflow_run.head_commit.sha }}

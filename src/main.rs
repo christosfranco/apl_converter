@@ -6,7 +6,7 @@ mod parser {
 // use parser
 use parser::parser_lib ;
 
-use apl_converter::ast::*;
+use apl_converter::generator::ast::*;
 
 
 use nom::IResult;

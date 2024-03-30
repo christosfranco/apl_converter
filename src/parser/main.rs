@@ -1,5 +1,5 @@
 extern crate nom;
-use apl_converter::ast::*;
+use apl_converter::generator::ast::*;
 use nom::IResult;
 use std::error::Error as StdError;
 use std::fs;
@@ -182,6 +182,33 @@ fn test_parse_matrix() {
     let vec10: Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(10)));
     let stmt: Stmt = Stmt::LeftStmt(vec10, None);
     let vector: Vector = Vector::Stmt(Some(Box::new(vector0)), Box::new(stmt));
+    let expected: Result<(&str, StmtLst), nom::Err<nom::error::Error<&str>>> =
+        Ok(("", StmtLst::Statement(None, Stmt::LeftStmt(vector, None))));
+    let mut expected_vec = Vec::new();
+    expected_vec.push(expected);
+    let actual_vec = parse_lines2(input);
+    // println!("Actual: {:?}", actual_vec);
+    // println!("Expected: {:?}", expected_vec);
+    for (actual, expected) in actual_vec.iter().zip(expected_vec.iter()) {
+        assert_eq!(actual, expected);
+    }
+}
+
+
+#[test]
+fn test_parse_matrix_basic() {
+    let string = "7";
+    // reverse the input as references to adhere to the borrowchecker
+    let rev_string = parser_lib::split_str_reverse_lines(string);
+
+    let mut input: Vec<&str> = Vec::new();
+    for line in rev_string.iter() {
+        input.push(line.as_str());
+    }
+    // let vector0: Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(7)));
+    // let vec10: Vector = Vector::Scalar(None, Scalar::IntFloat(IntFloat::Integer(7)));
+    let stmt: Scalar = Scalar::IntFloat((IntFloat::Integer(7)));
+    let vector: Vector = Vector::Scalar(None, (stmt));
     let expected: Result<(&str, StmtLst), nom::Err<nom::error::Error<&str>>> =
         Ok(("", StmtLst::Statement(None, Stmt::LeftStmt(vector, None))));
     let mut expected_vec = Vec::new();
