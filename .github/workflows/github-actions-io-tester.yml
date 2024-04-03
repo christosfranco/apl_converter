@@ -2,9 +2,9 @@ name: IO Tests
 run-name: ${{ github.actor }} IO testing with python3 and apl-gnu
 on: 
   push:
-    branches: [ $default-branch,main,feature ]
+    branches: [ $default-branch,main,development,feature ]
   pull_request:
-    branches: [ $default-branch,main,feature ]
+    branches: [ $default-branch,main,development,feature ]
 
     
     
