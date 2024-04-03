@@ -17,3 +17,25 @@ For scripting and standard IO testing: (It will just redirect output, which can 
 apl -f hello_world.apl --OFF --safe -s > output.txt
 ```
 
+Run the apl converter with a file as input
+```
+cargo --build release
+./target/release/apl_converter -f <path_input_file>
+```
+
+
+Run the apl converter with a stdin string as input
+```
+cargo --build release
+./target/release/apl_converter -i <string_apl_program>
+```
+
+Build docker image:
+```
+sudo docker build -t apl_converter .
+```
+
+Run apl_converter using docker image
+```
+sh run_docker_image.sh <path to apl_file>
+```
